@@ -369,16 +369,6 @@ After removing identifier/time columns and a small list of prespecified exclusio
   \item \textbf{Laboratory variables} (22): \texttt{HGB}, \texttt{MCV}, \texttt{Bicarbonate}, \texttt{Chloride}, \texttt{Potassium}, \texttt{Sodium}, \texttt{Urea\_Nitrogen}, \texttt{Creatinine}, \texttt{Glucose}, \texttt{Anion\_Gap}, \texttt{Red\_Blood\_Cells}, \texttt{White\_Blood\_Cells}, \texttt{Hematocrit}, \texttt{MCHC}, \texttt{Platelet\_Count}, \texttt{RDW}, \texttt{MCH}, \texttt{Basophils}, \texttt{Eosinophils}, \texttt{Lymphocytes}, \texttt{Monocytes}, \texttt{Neutrophils}.
 \end{itemize}
 
-\subparagraph{Standardization of numerical features.}
-Let $\mathcal{N}$ denote the standardized numerical variables,
-\(\mathcal{N}=\{\texttt{AGE}\}\cup\{\text{the 22 laboratory variables listed above}\}.\)
-We fit a single StandardScaler~\citep{Pedregosa2011_sklearn} on the \emph{training split only} (before carving out validation from the training set) and apply it to training and test; the validation split is then taken as a stratified subset of the already-standardized training data. For $j\in\mathcal{N}$,
-\begin{equation}
-\tilde{x}_j=\frac{x_j-\hat{\mu}_j}{\hat{\sigma}_j},\qquad
-\hat{\mu}_j=\frac{1}{n_{\text{train}}}\sum_{i\in \text{train}}x_{ij},\ \
-\hat{\sigma}_j^2=\frac{1}{n_{\text{train}}}\sum_{i\in \text{train}}(x_{ij}-\hat{\mu}_j)^2.
-\end{equation}
-
 
 
 %\subsection{Feature Engineering}
