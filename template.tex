@@ -378,9 +378,8 @@ After removing identifier/time columns and a small list of prespecified exclusio
 For each cancer type, we first divided the subjects into training and test sets, using an 85\%--15\% split. 
 We further split the training set so that 20\% of it was used as a validation set. 
 In all splits, stratified sampling was performed to ensure that the proportion of cases and controls remained consistent across the training, validation, and test sets. 
-Feature standardization was carried out by computing the mean and standard deviation from the training set, and the same parameters were then applied to both the validation and test sets.
+Feature standardization was carried out by computing the mean and standard deviation from the training set, and the same mean and standard deviation were then applied to both the validation and test sets for the standardization.
 
-For each cancer, we stratified subjects into train/test (85/15\%) and further carved a validation set (20\% of train) when cross-validation was disabled. Stratification preserved the case--control ratio in each split. Standardization parameters were fit on the training data and applied to validation and test.
 
 \subsection{Models}
 
