@@ -239,7 +239,6 @@ We used the publicly available MIMIC-IV (version 3.1) database. We assembled fiv
 
 
 
-
 \subsection{Preprocessing, Splits, and Normalization}
 For each cancer, we concatenated its cases and matched controls to create a full dataset, dropped ignore-listed columns (subject identifier, index timestamp, and time-gap features), performed stratified train/test splitting (85\%/15\%), and further carved a validation split from training data when cross-validation was disabled. Continuous features were standardized using parameters fit on the training partition and applied to validation and test sets.
 
@@ -334,32 +333,20 @@ Experiments are implemented in Python/PyTorch. The end-to-end entry point is \te
 
 
 
-\section{Materials and Methods (v2)}
+
+
+\section{Materials and Methods v6}
 
 \subsection{Data Source and Ethics}
-We used the publicly available de-identified MIMIC-IV clinical database (v3.x) curated by MIT-LCP~\citep{Johnson2023_MIMICIV}.
-Access to the database was granted to our research team, and we adhered to all usage agreements, including the prohibition of data disclosure and misuse.
-
-\subsection{Cohort Construction and Features}
-In this study, we constructed cohorts not only for gastric cancer (GC) but also for multiple non-GC cancers (colorectal, esophageal, liver, and pancreatic).
-This design emphasizes that our approach leverages diverse cancer types for pre-training before fine-tuning on GC.
-For each cancer, we identified cases by the earliest qualifying ICD-9/10 diagnosis (prefix lists for GC and four non-GC cancers) and sampled controls at a fixed $1{:}3$ case:control ratio, excluding subjects with the target cancer.
-The GC index time $t_G$ is the first GC diagnosis; for non-GC cancers $c\in\{\mathrm{C},\mathrm{E},\mathrm{L},\mathrm{P}\}$ we analogously define $t_c$.
-Features include demographics (age, sex), binary ICD-derived comorbidity indicators (e.g., diabetes, GERD, ulcers), and the most recent values of routine labs (CBC/chemistry) in a $\pm 30$-day window around the index time (or all available values for controls).
-Identical preprocessing is applied to cases and controls; numerical features are standardized by removing the mean and scaling to unit variance using statistics on the training split only.
-To address missing values, we applied median imputation based on the control population. 
-For each feature, the median value observed among the controls was calculated and substituted for missing entries across both cases and controls. 
-This strategy minimizes information leakage from the case group and provides a robust central tendency measure for imputation.
-[[TODO: finally used feature list ]]
-
+We used the publicly available de-identified MIMIC-IV clinical database (v3.x) curated by MIT-LCP~\citep{Johnson2023_MIMICIV}. Data access requires credentialing and acceptance of a data-use agreement via PhysioNet. Because the dataset is de-identified, this secondary analysis is typically exempt from institutional review (verify locally).
 
 \subsection{Cohort Construction and Features}
 
 \paragraph{Case--control cohorts and index times.}
-For each cancer, we identified cases by the earliest qualifying ICD-9/10 diagnosis (prefix lists for GC and four non-GC cancers) and sampled controls at a fixed $1{:}3$ case:control ratio, excluding subjects with the target cancer. The GC index time $t_G$ is the first GC diagnosis; for non-GC cancers $c\in\{\mathrm{C},\mathrm{E},\mathrm{L},\mathrm{P}\}$ we analogously define $t_c$.
+For each cancer, we identified cases by the earliest qualifying ICD-9/10 diagnosis (prefix lists for GC and four non-GC cancers) and sampled controls at a fixed $1{:}3$ case:control ratio, excluding subjects with the target cancer. The GC index time $t_G$ is the first GC diagnosis; for non-GC cancers $c\in\{\mathrm{C},\mathrm{E},\mathrm{L},\mathrm{P}\}$ we analogously define $t_c$. In what follows, single-letter cancer codes are used consistently: \textbf{C}=colorectal, \textbf{E}=esophageal, \textbf{L}=liver, \textbf{P}=pancreatic (source tasks), and \textbf{G}=gastric (target task).
 
 \paragraph{Feature engineering (common across cancers).}
-We constructed features identically for cases and controls: (i) demographics, (ii) binary indicators from ICD-9/10 groupings, and (iii) routine laboratory values. For laboratory variables, we first restricted rows to a curated itemid list and then, for each subject and item, took the \emph{last available value} within a $\pm30$\,day window around the index time for cases; for controls (when date matching was disabled), the last available value across all observations was used. Missing laboratory values were then aligned to the index time as described and missing entries imputed in a consistent manner across cohorts; laboratory-missingness flags, when created during preprocessing, were removed prior to modeling.
+We constructed features identically for cases and controls: (i) demographics, (ii) binary indicators from ICD-9/10 groupings, and (iii) routine laboratory values. For laboratory variables, we first restricted rows to a curated itemid list and then, for each subject and item, took the \emph{last available value} within a $\pm30$\,day window around the index time for cases; for controls (when date matching was disabled), the last available value across all observations was used. Laboratory values were then aligned to the index time as described and missing entries imputed in a cohort-consistent manner (see “Missing data imputation”).
 
 \paragraph{Final feature set used for modeling.}
 After removing identifier/time columns and a small list of prespecified exclusions, the final input vector $x\in\mathbb{R}^d$ comprised:
@@ -368,22 +355,36 @@ After removing identifier/time columns and a small list of prespecified exclusio
   \item \textbf{ICD-derived binary indicators} (26): \texttt{DIABETES}, \texttt{OBESITY}, \texttt{ALCOHOL}, \texttt{SMOKE}, \texttt{GERD}, \texttt{DYSPEPSIA}, \texttt{ULCER}, \texttt{GASTRITIS}, \texttt{HPYLORI}, \texttt{HYPERTENSION}, \texttt{MI\_AP}, \texttt{DYSLIPIDEMIA}, \texttt{GA}, \texttt{FAMILY\_HISTORY\_CANCER}, \texttt{PROTEIN\_CALORIE\_MALNUTRITION}, \texttt{POSTHEMORRHAGIC\_ANEMIA}, \texttt{ADVERSE\_EFFECT\_ANTINEOPLASTIC}, \texttt{DYSPHAGIA}, \texttt{ANTINEOPLASTIC\_CHEMOTHERAPY}, \texttt{ATRIAL\_FIBRILLATION}, \texttt{IRON\_DEFICIENCY\_ANEMIA}, \texttt{KIDNEY\_FAILURE}, \texttt{CORONARY\_ATHEROSCLEROSIS\_NATIVE}, \texttt{ATHEROSCLEROTIC\_HEART\_DISEASE\_NATIVE\_NO\_ANGINA}, \texttt{PURE\_HYPERCHOLESTEROLEMIA}, \texttt{HYPO\_OSMOLALITY\_HYPONATREMIA}.
   \item \textbf{Laboratory variables} (22): \texttt{HGB}, \texttt{MCV}, \texttt{Bicarbonate}, \texttt{Chloride}, \texttt{Potassium}, \texttt{Sodium}, \texttt{Urea\_Nitrogen}, \texttt{Creatinine}, \texttt{Glucose}, \texttt{Anion\_Gap}, \texttt{Red\_Blood\_Cells}, \texttt{White\_Blood\_Cells}, \texttt{Hematocrit}, \texttt{MCHC}, \texttt{Platelet\_Count}, \texttt{RDW}, \texttt{MCH}, \texttt{Basophils}, \texttt{Eosinophils}, \texttt{Lymphocytes}, \texttt{Monocytes}, \texttt{Neutrophils}.
 \end{itemize}
+We excluded \texttt{subject\_id}, \texttt{c\_time} (index timestamp), and a time-derived covariate \texttt{admittime\_GAP}. In addition, two ICD-derived features (\texttt{NEOPLASM\_INTRA\_ABDOMINAL\_LYMPH}, \texttt{NEOPLASM\_RETROPERITONEUM\_PERITONEUM}) were dropped by design in all experiments. With laboratories enabled, this yields $d=50$ features per subject.
 
+\paragraph{Missing data imputation.}
+Before splitting into train/validation/test, we applied a deterministic imputation routine to each cancer-specific cohort table (cases$+$controls). For every laboratory variable $\ell\in\{\texttt{HGB},\ldots,\texttt{Neutrophils}\}$, a binary flag $m_\ell\in\{0,1\}$ was created to mark whether the original entry was missing. Missing numerical entries were then replaced by the cohort-level median of the non-missing values for that variable (computed within each cancer table). Formally, for subject $i$ and variable $j$,
+\begin{equation}
+x_{ij}\leftarrow
+\begin{cases}
+x_{ij}, & \text{if observed},\\
+\mathrm{median}\big(\{x_{kj}: x_{kj}\ \text{observed in the same cohort}\}\big), & \text{if missing.}
+\end{cases}
+\end{equation}
+After imputation, the auxiliary flags $\{m_\ell\}$ were \emph{dropped} to maintain a uniform input space across models. Subsequent standardization (below) is performed after splitting and is fit on the training split only.
 
-
-%\subsection{Feature Engineering}
-%We engineered features that are interpretable and clinically plausible. Demographics included age and sex. Binary ICD-derived comorbidity indicators were computed for clinically relevant conditions (e.g., diabetes, obesity, GERD, dyspepsia, gastric ulcer, alcohol/tobacco use, anemia, malnutrition, atrial fibrillation, renal failure, lipid disorders). For laboratory features, we included the most recent value per analyte within a symmetric look-back window around the index date (or all available values for controls), covering complete blood count indices and common chemistries (e.g., hemoglobin, hematocrit, MCV/MCH/MCHC, WBC and differentials, platelets, RDW; sodium, potassium, chloride, bicarbonate, urea nitrogen, creatinine, glucose, anion gap). Missing values were imputed and missingness flags optionally dropped after imputation. Non-predictive index-related variables were excluded from modeling.
+\paragraph{Standardization of numerical features.}
+Let $\mathcal{N}$ denote the standardized numerical variables,
+\(\mathcal{N}=\{\texttt{AGE}\}\cup\{\text{the 22 laboratory variables listed above}\}.\)
+We fit a single StandardScaler~\citep{Pedregosa2011_sklearn} on the \emph{training split only} (before carving out validation from the training set) and apply it to training and test; the validation split is then taken as a stratified subset of the already-standardized training data. For $j\in\mathcal{N}$,
+\begin{equation}
+\tilde{x}_j=\frac{x_j-\hat{\mu}_j}{\hat{\sigma}_j},\qquad
+\hat{\mu}_j=\frac{1}{n_{\text{train}}}\sum_{i\in \text{train}}x_{ij},\ \
+\hat{\sigma}_j^2=\frac{1}{n_{\text{train}}}\sum_{i\in \text{train}}(x_{ij}-\hat{\mu}_j)^2.
+\end{equation}
+All binary indicators remain unchanged at this stage. The MLP and transfer models consume these standardized inputs. For the LR baseline, an additional internal StandardScaler is fit on the full feature matrix prior to classification, which is standard for linear models~\citep{Pedregosa2011_sklearn}.
 
 \subsection{Train/Validation/Test Partitions}
-For each cancer type, we first divided the subjects into training and test sets, using an 85\%--15\% split. 
-We further split the training set so that 20\% of it was used as a validation set. 
-In all splits, stratified sampling was performed to ensure that the proportion of cases and controls remained consistent across the training, validation, and test sets. 
-Feature standardization was carried out by computing the mean and standard deviation from the training set, and the same mean and standard deviation were then applied to both the validation and test sets for the standardization.
-
+For each cancer, we stratified subjects into train/test (85/15\%) and further carved a validation set (20\% of train) when cross-validation was disabled. Stratification preserved the case--control ratio in each split. Standardization parameters were fit on the training data and applied to validation and test as described above.
 
 \subsection{Models}
 
-\paragraph{Logistic Regression (LR).} With standardized features $\tilde{x}=(x-\mu)/\sigma$, LR models $p_\theta(y = 1\mid x)=\sigma(w^\top \tilde{x}+b)$; parameters minimize class-weighted cross-entropy.
+\paragraph{Logistic Regression (LR).} With standardized features $\tilde{x}=(x-\mu)/\sigma$, LR models $p_\theta(y{=}1\mid x)=\sigma(w^\top \tilde{x}+b)$; parameters minimize class-weighted cross-entropy.
 
 \paragraph{Gradient Boosting (XGBoost).} We use XGBoost with imbalance-aware weighting~\citep{Chen2016_XGBoost}.
 
@@ -392,9 +393,30 @@ Feature standardization was carried out by computing the mean and standard devia
 \paragraph{Transfer MLP (Multi-Head).}
 We parameterize a shared backbone $f_\phi:\mathbb{R}^d\!\to\!\mathbb{R}^h$ and cancer-specific linear heads $\{h_c:\mathbb{R}^h\!\to\!\mathbb{R}\}_{c\in\mathcal{C}}$, yielding logits $z_c(x)=h_c(f_\phi(x))$. Head strategies for GC are detailed below.
 
+\subsection{Losses, Class Imbalance, and Thresholding}
+For a logit $u$ and label $y\in\{0,1\}$, we use
+\begin{equation}
+\ell_{\mathrm{BCE}}(u,y;\alpha)=-\alpha\,y\log\sigma(u)-(1-y)\log(1-\sigma(u)),
+\end{equation}
+with positive-class weight $\alpha{=}3$. Decision thresholds are chosen on the validation set by maximizing $F_1$:
+\begin{equation}
+t^\star=\arg\max_{t\in[0,1]}\ \frac{2\,\mathrm{Precision}(t)\cdot\mathrm{Recall}(t)}{\mathrm{Precision}(t)+\mathrm{Recall}(t)}.
+\end{equation}
+
+
+
 \subsection{Multi-Cancer Pretraining Protocol}\label{sec:pretrain_multi}
 
-Let $\mathcal{C}$ denote the set of \emph{non-gastric} cancers used for pretraining; in our main configuration, $\mathcal{C}=\{\mathrm{C},\mathrm{E},\mathrm{L},\mathrm{P}\}$. For $c\in\mathcal{C}$, let $\mathcal{D}_c=\{(x_i^{(c)},y_i^{(c)})\}_{i=1}^{N_c}$ be the corresponding case--control dataset built with identical features and a $1{:}3$ ratio. The final linear layer has $|\mathcal{C}|$ outputs during pretraining and is extended to $|\mathcal{C}|{+}1$ in the \texttt{new} strategy during fine-tuning (to add a GC head).
+Let $\mathcal{C}$ denote the set of \emph{non-gastric} cancers used for pretraining; in our main configuration, $\mathcal{C}=\{\mathrm{C},\mathrm{E},\mathrm{L},\mathrm{P}\}$. 
+\paragraph{Notation (source cancer codes).}
+We use single-letter codes for the non-gastric cancers used during pretraining:
+\textbf{C} = colorectal cancer (\emph{ICD-9}: 1530--1539, 1540--1541; \emph{ICD-10}: C18--C20),
+\textbf{E} = esophageal cancer (\emph{ICD-9}: 1500--1509; \emph{ICD-10}: C15*),
+\textbf{L} = liver cancer (\emph{ICD-9}: 1550--1552; \emph{ICD-10}: C22*),
+\textbf{P} = pancreatic cancer (\emph{ICD-9}: 1570--1574, 1578--1579; \emph{ICD-10}: C25*).
+The target task is gastric cancer, denoted \textbf{G} (\emph{ICD-9}: 1510--1519; \emph{ICD-10}: C16*).
+
+For $c\in\mathcal{C}$, let $\mathcal{D}_c=\{(x_i^{(c)},y_i^{(c)})\}_{i=1}^{N_c}$ be the corresponding case--control dataset built with identical features and a $1{:}3$ ratio. The final linear layer has $|\mathcal{C}|$ outputs during pretraining and is extended to $|\mathcal{C}|{+}1$ in the \texttt{new} strategy during fine-tuning (where a new GC head is introduced).
 
 \paragraph{Objective and type-mixed minibatches.}
 We minimize the average class-weighted binary cross-entropy over types:
@@ -436,12 +458,160 @@ where $\mathcal{S}$ excludes biases; in \texttt{new} we also exclude the expande
 \label{eq:ft_obj}
 \min_{\theta}\ \mathbb{E}_{(x,y)\sim \mathcal{D}_G}\!\big[\ell_{\mathrm{BCE}}(s(x),y;\alpha)\big]\;+\;\lambda\,\Omega_{\mathrm{L2\text{-}SP}}(\theta).
 \end{equation}
-When \texttt{ft\_head\_only} is enabled, a gradient mask restricts updates to the selected row of the final linear layer (the shared backbone runs in inference mode for weight updates).
+When \texttt{ft\_head\_only} is enabled, a gradient mask restricts updates to the selected row of the final linear layer; otherwise the backbone is updated jointly.
 
 \paragraph{Batch size, imbalance, and schedules.}
 Mini-batch size is either fixed at $64$ or set to $\lfloor \texttt{mb\_rate}\cdot N\rfloor$ (capped to $[8,64]$). All tasks share $\alpha{=}3$ in $\ell_{\mathrm{BCE}}$. Adam optimizes both phases with separate learning rates/decays $(\texttt{pre\_lr},\texttt{pre\_weight\_decay})$ and $(\texttt{ft\_lr},\texttt{ft\_weight\_decay})$.
 
 \paragraph{Summary.}
+\begin{enumerate}[topsep=0pt,itemsep=1pt,leftmargin=12pt]
+\item Build per-type loaders for each $c\in\mathcal{C}$; initialize $f_\phi$ and $\{h_c\}$.
+\item For $t=1\ldots T$: draw one batch from each loader; compute \eqref{eq:pre_mix}; update parameters.
+\item Every $K$ steps: compute per-type and mean validation metrics; select the best snapshot.
+\item Save weights and per-type metrics; proceed to GC fine-tuning with \texttt{avg}/\texttt{best}/\texttt{new} and (optionally) L2-SP.
+\end{enumerate}
+
+\subsection{Optimization and Early Stopping}
+Neural models are optimized with Adam~\citep{Kingma2015_Adam}. Batch normalization and dropout act as regularizers~\citep{Ioffe2015_BN,Srivastava2014_Dropout}. In pretraining, validation is performed every $K$ steps and the best snapshot by $\overline{\mathrm{AUROC}}$ is retained; in fine-tuning, early stopping on validation AUROC is optional.
+
+\subsection{Evaluation Metrics}
+Primary metrics are AUROC and AP, with sensitivity and specificity reported at $t^\star$. In imbalanced settings, AP is often more informative than AUROC~\citep{Saito2015_PR}.
+
+\subsection{Implementation and Reproducibility}
+The pipeline is implemented in Python. The entry script enumerates a safe hyperparameter grid, caches pretrained configurations (to avoid redundant pretraining), and executes single-run jobs. Each run writes a JSON artifact with hyperparameters and metrics; merged summaries are produced for analysis. Deterministic seeding and graceful-stop flags are supported.
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\section{Materials and Methods (v2)}
+
+\subsection{Data Source and Ethics}
+We used the publicly available de-identified MIMIC-IV clinical database (v3.x) curated by MIT-LCP~\citep{Johnson2023_MIMICIV}.
+Access to the database was granted to our research team, and we adhered to all usage agreements, including the prohibition of data disclosure and misuse.
+
+\subsection{Cohort Construction and Features}
+In this study, we constructed cohorts not only for gastric cancer (GC) but also for multiple non-GC cancers (colorectal, esophageal, liver, and pancreatic).
+This design emphasizes that our approach leverages diverse cancer types for pre-training before fine-tuning on GC.
+For each cancer, we identified cases by the earliest qualifying ICD-9/10 diagnosis (prefix lists for GC and four non-GC cancers) and sampled controls at a fixed $1{:}3$ case:control ratio, excluding subjects with the target cancer.
+The GC index time $t_G$ is the first GC diagnosis; for non-GC cancers $c\in\{\mathrm{CC},\mathrm{EC},\mathrm{LC},\mathrm{PC}\}$ we analogously define $t_c$.
+Features include demographics (age, sex), binary ICD-derived comorbidity indicators (e.g., diabetes, GERD, ulcers), and the most recent values of routine labs (CBC/chemistry) in a $\pm 30$-day window around the index time (or all available values for controls).
+Identical preprocessing is applied to cases and controls; numerical features are standardized by removing the mean and scaling to unit variance using statistics on the training split only.
+To address missing values, we applied median imputation based on the control population. 
+For each feature, the median value observed among the controls was calculated and substituted for missing entries across both cases and controls. 
+This strategy minimizes information leakage from the case group and provides a robust central tendency measure for imputation.
+[[TODO: finally used feature list ]]
+
+\subparagraph{Cancer type notation.}
+Throughout, we use the codes to denote cancer types: \textbf{GC} = gastric cancer (target task), \textbf{CC} = colorectal cancer, \textbf{EC} = esophageal cancer, \textbf{LC} = liver cancer, and \textbf{PC} = pancreatic cancer.
+
+
+\subsection{Cohort Construction and Features}
+
+\paragraph{Case--control cohorts and index times.}
+For each cancer, we identified cases by the earliest qualifying ICD-9/10 diagnosis (prefix lists for GC and four non-GC cancers) and sampled controls at a fixed $1{:}3$ case:control ratio, excluding subjects with the target cancer. The GC index time $t_G$ is the first GC diagnosis; for non-GC cancers $c\in\{\mathrm{CC},\mathrm{EC},\mathrm{LC},\mathrm{PC}\}$ we analogously define $t_c$.
+
+\paragraph{Feature engineering (common across cancers).}
+We constructed features identically for cases and controls: (i) demographics, (ii) binary indicators from ICD-9/10 groupings, and (iii) routine laboratory values. For laboratory variables, we first restricted rows to a curated itemid list and then, for each subject and item, took the \emph{last available value} within a $\pm30$\,day window around the index time for cases; for controls (when date matching was disabled), the last available value across all observations was used. Missing laboratory values were then aligned to the index time as described and missing entries imputed in a consistent manner across cohorts; laboratory-missingness flags, when created during preprocessing, were removed prior to modeling.
+
+\paragraph{Final feature set used for modeling.}
+After removing identifier/time columns and a small list of prespecified exclusions, the final input vector $x\in\mathbb{R}^d$ comprised:
+\begin{itemize}[leftmargin=12pt,topsep=2pt,itemsep=1pt]
+  \item \textbf{Demographics} (2): \texttt{AGE} (years), \texttt{MALE} (0/1).
+  \item \textbf{ICD-derived binary indicators} (26): \texttt{DIABETES}, \texttt{OBESITY}, \texttt{ALCOHOL}, \texttt{SMOKE}, \texttt{GERD}, \texttt{DYSPEPSIA}, \texttt{ULCER}, \texttt{GASTRITIS}, \texttt{HPYLORI}, \texttt{HYPERTENSION}, \texttt{MI\_AP}, \texttt{DYSLIPIDEMIA}, \texttt{GA}, \texttt{FAMILY\_HISTORY\_CANCER}, \texttt{PROTEIN\_CALORIE\_MALNUTRITION}, \texttt{POSTHEMORRHAGIC\_ANEMIA}, \texttt{ADVERSE\_EFFECT\_ANTINEOPLASTIC}, \texttt{DYSPHAGIA}, \texttt{ANTINEOPLASTIC\_CHEMOTHERAPY}, \texttt{ATRIAL\_FIBRILLATION}, \texttt{IRON\_DEFICIENCY\_ANEMIA}, \texttt{KIDNEY\_FAILURE}, \texttt{CORONARY\_ATHEROSCLEROSIS\_NATIVE}, \texttt{ATHEROSCLEROTIC\_HEART\_DISEASE\_NATIVE\_NO\_ANGINA}, \texttt{PURE\_HYPERCHOLESTEROLEMIA}, \texttt{HYPO\_OSMOLALITY\_HYPONATREMIA}.
+  \item \textbf{Laboratory variables} (22): \texttt{HGB}, \texttt{MCV}, \texttt{Bicarbonate}, \texttt{Chloride}, \texttt{Potassium}, \texttt{Sodium}, \texttt{Urea\_Nitrogen}, \texttt{Creatinine}, \texttt{Glucose}, \texttt{Anion\_Gap}, \texttt{Red\_Blood\_Cells}, \texttt{White\_Blood\_Cells}, \texttt{Hematocrit}, \texttt{MCHC}, \texttt{Platelet\_Count}, \texttt{RDW}, \texttt{MCH}, \texttt{Basophils}, \texttt{Eosinophils}, \texttt{Lymphocytes}, \texttt{Monocytes}, \texttt{Neutrophils}.
+\end{itemize}
+
+
+
+%\subsection{Feature Engineering}
+%We engineered features that are interpretable and clinically plausible. Demographics included age and sex. Binary ICD-derived comorbidity indicators were computed for clinically relevant conditions (e.g., diabetes, obesity, GERD, dyspepsia, gastric ulcer, alcohol/tobacco use, anemia, malnutrition, atrial fibrillation, renal failure, lipid disorders). For laboratory features, we included the most recent value per analyte within a symmetric look-back window around the index date (or all available values for controls), covering complete blood count indices and common chemistries (e.g., hemoglobin, hematocrit, MCV/MCH/MCHC, WBC and differentials, platelets, RDW; sodium, potassium, chloride, bicarbonate, urea nitrogen, creatinine, glucose, anion gap). Missing values were imputed and missingness flags optionally dropped after imputation. Non-predictive index-related variables were excluded from modeling.
+
+\subsection{Train/Validation/Test Partitions}
+For each cancer type, we first divided the subjects into training and test sets, using an 85\%--15\% split. 
+We further split the training set so that 20\% of it was used as a validation set. 
+In all splits, stratified sampling was performed to ensure that the proportion of cases and controls remained consistent across the training, validation, and test sets. 
+Feature standardization was carried out by computing the mean and standard deviation from the training set, and the same mean and standard deviation were then applied to both the validation and test sets for the standardization.
+
+
+\subsection{Models}
+
+\paragraph{Logistic Regression (LR).} With standardized features $\tilde{x}=(x-\mu)/\sigma$, LR models $p_\theta(y = 1\mid x)=\sigma(w^\top \tilde{x}+b)$; parameters minimize class-weighted cross-entropy.
+
+\paragraph{Gradient Boosting (XGBoost).} We use XGBoost with imbalance-aware weighting~\citep{Chen2016_XGBoost}.
+
+\paragraph{Multilayer Perceptron (MLP).} A feed-forward network with linear blocks, batch normalization, ReLU, and dropout~\citep{Ioffe2015_BN,Srivastava2014_Dropout}.
+
+\paragraph{Transfer MLP (Multi-Head).}
+We parameterize a shared backbone $f_\phi:\mathbb{R}^d\!\to\!\mathbb{R}^h$ and cancer-specific linear heads $\{h_c:\mathbb{R}^h\!\to\!\mathbb{R}\}_{c\in\mathcal{C}}$, yielding logits $z_c(x)=h_c(f_\phi(x))$. Head strategies for GC are detailed below.
+
+\subsection{Losses, Class Imbalance, and Thresholding}
+For a logit $u$ and label $y\in\{0,1\}$, we use
+\begin{equation}
+\ell_{\mathrm{BCE}}(u,y;\alpha)=-\alpha\,y\log\sigma(u)-(1-y)\log(1-\sigma(u)),
+\end{equation}
+with positive-class weight $\alpha{=}3$.
+%TODO: move the below in the section of experimental results?
+%Decision thresholds are chosen on the validation set by maximizing $F_1$:
+%\begin{equation}
+%t^\star=\arg\max_{t\in[0,1]}\ \frac{2\,\mathrm{Precision}(t)\cdot\mathrm{Recall}(t)}{\mathrm{Precision}(t)+\mathrm{Recall}(t)}.
+%\end{equation}
+
+\subsection{Multi-Cancer Pretraining}\label{sec:pretrain_multi}
+Let $\mathcal{C}$ denote the set of \emph{non-gastric} cancers used for pretraining; in our main configuration, $\mathcal{C}=\{\mathrm{C},\mathrm{E},\mathrm{L},\mathrm{P}\}$ (i.e., colorectal, esophageal, liver, and pancreatic cancers, respectively).
+For each $c\in\mathcal{C}$, let $\mathcal{D}_c=\{(x_i^{(c)},y_i^{(c)})\}_{i=1}^{N_c}$ be the corresponding case--control dataset, constructed with identical features using a case--control ratio of $1{:}3$ (one case per three controls).
+The final linear layer has $|\mathcal{C}|$ outputs during pretraining and is replaced with a new $1$-dimensional head during fine-tuning (to predict GC).
+
+
+
+\paragraph{Objective and type-mixed minibatches.}
+We minimize the average class-weighted binary cross-entropy over types:
+\begin{equation}
+\label{eq:pre_obj}
+\min_{\phi,\{h_c\}}\ \mathcal{L}_{\mathrm{pre}}(\phi,\{h_c\})=\frac{1}{|\mathcal{C}|}\sum_{c\in\mathcal{C}} \ \mathbb{E}_{(x,y)\sim\mathcal{D}_c}\!\big[\,\ell_{\mathrm{BCE}}(h_c(f_\phi(x)),y;\alpha)\,\big],
+\end{equation}
+with positive-class weight $\alpha{=}3$. In practice, each optimization step draws one mini-batch $B_c$ from \emph{each} $c\in\mathcal{C}$ and accumulates losses across types:
+\begin{equation}
+\label{eq:pre_mix}
+\hat{\mathcal{L}}_{\mathrm{pre}}=\frac{1}{|\mathcal{C}|}\sum_{c\in\mathcal{C}}\ \frac{1}{|B_c|}\sum_{(x,y)\in B_c}\ell_{\mathrm{BCE}}(h_c(f_\phi(x)),y;\alpha),
+\end{equation}
+so that heads specialize while gradients are shared through $f_\phi$.
+
+\paragraph{Validation across types and model selection.}
+At regular intervals (every $K$ steps), we evaluate each head on its validation split and report both per-type metrics and their mean:
+\begin{equation}
+\overline{\mathrm{AUROC}}=\frac{1}{|\mathcal{C}|}\sum_{c\in\mathcal{C}}\mathrm{AUROC}_c,\qquad
+\overline{\mathrm{AP}}=\frac{1}{|\mathcal{C}|}\sum_{c\in\mathcal{C}}\mathrm{AP}_c.
+\end{equation}
+We retain the snapshot that maximizes $\overline{\mathrm{AUROC}}$ (ties broken by $\overline{\mathrm{AP}}$). The per-type validation metrics $\{(\mathrm{AUROC}_c,\mathrm{AP}_c)\}$ are stored for GC head selection in the \texttt{best} strategy.
+
+\paragraph{Fine-tuning head strategies.}
+During GC fine-tuning we use one of three strategies to produce the scalar logit $s(x)$:
+\begin{align}
+\texttt{avg:}\quad & s(x)=\frac{1}{|\mathcal{C}|}\sum_{c\in\mathcal{C}} z_c(x),\\
+\texttt{best:}\quad & s(x)=z_{\hat c}(x),\ \ \hat c=\arg\max_{c\in\mathcal{C}}\big(\mathrm{AUROC}_c,\mathrm{AP}_c\big),\\
+\texttt{new:}\quad & s(x)=z_G(x),\ \ \text{extend the last layer to include a new GC head.}
+\end{align}
+In \texttt{new}, the GC head is randomly initialized; in all modes, the shared backbone is initialized from pretraining.
+
+\paragraph{L2-SP anchoring and trainable sets.}
+We regularize the distance to the pretrained parameters $\theta^\star$ using the L2-SP penalty~\citep{Li2018_L2SP}:
+\begin{equation}
+\Omega_{\mathrm{L2\text{-}SP}}(\theta)=\sum_{j\in\mathcal{S}}\|\theta_j-\theta^\star_j\|_2^2,
+\end{equation}
+where $\mathcal{S}$ excludes biases; in \texttt{new} we also exclude the expanded final linear layer so that the new GC head is unconstrained. The GC fine-tuning objective is
+\begin{equation}
+\label{eq:ft_obj}
+\min_{\theta}\ \mathbb{E}_{(x,y)\sim \mathcal{D}_G}\!\big[\ell_{\mathrm{BCE}}(s(x),y;\alpha)\big]\;+\;\lambda\,\Omega_{\mathrm{L2\text{-}SP}}(\theta).
+\end{equation}
+When \texttt{ft\_head\_only} is enabled, a gradient mask restricts updates to the selected row of the final linear layer (the shared backbone runs in inference mode for weight updates).
+
+\paragraph{Batch size, imbalance, and schedules.}
+Mini-batch size is either fixed at $64$ or set to $\lfloor \texttt{mb\_rate}\cdot N\rfloor$ (capped to $[8,64]$). All tasks share $\alpha{=}3$ in $\ell_{\mathrm{BCE}}$. Adam optimizes both phases with separate learning rates/decays $(\texttt{pre\_lr},\texttt{pre\_weight\_decay})$ and $(\texttt{ft\_lr},\texttt{ft\_weight\_decay})$.
+
+\subparagraph{Summary.}
 \begin{enumerate}[topsep=0pt,itemsep=1pt,leftmargin=12pt]
 \item Build per-type loaders for each $c\in\mathcal{C}$; initialize $f_\phi$ and $\{h_c\}$.
 \item For $t=1\ldots T$: draw one batch from each loader; compute \eqref{eq:pre_mix}; update parameters.
@@ -470,9 +640,108 @@ The pipeline is implemented in Python. The entry script enumerates a safe hyperp
 
 
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Results}
+
+
+\subsection{Cohort Overview}
+We constructed case--control cohorts for GC (target) and four source cancers (CC, EC, LC, PC) at a 1:3 ratio.
+Table~\ref{tab:cohort} summarizes sample sizes, demographics, and feature completeness per cohort.
+% 표준화/분할/결측 대체 파이프라인은 Methods 참조: prepare_datasets, nan_imputation. 
+% (Code refs: data.py, preprocess.py)  % :contentReference[oaicite:30]{index=30} :contentReference[oaicite:31]{index=31}
+
+\begin{table}[H]
+\caption{Cohort summary (GC target; CC/EC/LC/PC sources). Male (\%) and age median [IQR].}
+\label{tab:cohort}
+\centering
+\begin{tabular}{lrrrr}
+\toprule
+Cohort & Cases & Controls & Male (\%) & Age (Median [IQR]) \\
+\midrule
+GC & 731 & 2193 & 51.1 & 55.0 [35.0–69.0] \\
+CC & 2020 & 6060 & 49.5 & 55.0 [35.0–70.0] \\
+EC & 529 & 1587 & 55.1 & 56.0 [36.0–69.0] \\
+LC & 1771 & 5313 & 53.3 & 55.0 [34.0–68.0] \\
+PC & 1958 & 5874 & 48.6 & 56.0 [34.0–70.0] \\
+\bottomrule
+\end{tabular}
+
+\end{table}
+
+\subsection{Primary Test Performance}
+We compare LR, XGB, and single-task MLP trained on GC only with the proposed Transfer-MLP (pretrained on CC/EC/LC/PC, fine-tuned on GC).
+Performance is reported as AUROC and AP on the held-out test set;
+Sensitivity, Specificity, and F1 are computed at the validation-selected threshold $t^\star$ that maximizes F1. % (Code refs: Train_MLP/LR/XGB, get_best_f1_threshold)
+% :contentReference[oaicite:32]{index=32} :contentReference[oaicite:33]{index=33} :contentReference[oaicite:34]{index=34}
+We show mean $\pm$ SD over five seeds and 95\% CIs from patient-level bootstrap.
+Table~\ref{tab:main} presents the results.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lllll}
+\toprule
+model & test\_auroc\_mean & test\_f1\_mean & test\_sensitivity\_mean & test\_specificity\_mean \\
+\midrule
+MLP & 0.909 & 0.694 & 0.839 & 0.806 \\
+Transfer & 0.904 & 0.702 & 0.832 & 0.820 \\
+LR & 0.899 & 0.680 & 0.764 & 0.839 \\
+XGB & 0.894 & 0.705 & 0.718 & 0.894 \\
+\bottomrule
+\end{tabular}
+
+\caption{Model comparison at $\textbackslash\{\}mathrm\{gc\textbackslash\{\}\_rate\}=1.0$ (test metrics).}
+\label{tab:model-compare-gc1}
+\end{table}
+
+
+\begin{table}[H]
+\caption{Main test performance (mean $\pm$ SD over 5 seeds; 95\% CI in parentheses).}
+\label{tab:main}
+\centering
+\begin{tabular}{lcccccc}
+\toprule
+Model & Pretrain & Head & L2-SP & AUROC & AP & F1 (@$t^\star$) \\
+\midrule
+LR & -- & -- & -- & \dots & \dots & \dots \\
+XGB & -- & -- & -- & \dots & \dots & \dots \\
+MLP (GC only) & -- & -- & -- & \dots & \dots & \dots \\
+Transfer-MLP & CC+EC+LC+PC & avg & on & \textbf{\dots} & \textbf{\dots} & \textbf{\dots} \\
+Transfer-MLP & CC+EC+LC+PC & new & on & \dots & \dots & \dots \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Ablation Studies}
+\paragraph{Source composition and head strategies.}
+We varied pretraining sources (single vs. multiple) and head strategies (avg/new).
+% Multi-type batching and per-type validation selection are implemented as in Transfer\_MLP. 
+% :contentReference[oaicite:35]{index=35}
+Table~\ref{tab:ablation} shows GC test AUROC/AP and the deltas vs.\ single-task MLP.
+
+\begin{table}[H]
+\caption{Ablation on pretraining sources, head strategies, and L2-SP.}
+\label{tab:ablation}
+\centering
+\begin{tabular}{lcccc}
+\toprule
+Pretrain Sources & Head & L2-SP & AUROC & AP \\
+\midrule
+CC & avg & on & \dots & \dots \\
+EC & avg & on & \dots & \dots \\
+CC+EC+LC+PC & avg & on & \dots & \dots \\
+CC+EC+LC+PC & new & on & \dots & \dots \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Data efficiency.}
+We reduced the GC training fraction ($\texttt{gc\_rate}\in\{1.0,0.5,0.2,0.1,0.05\}$) and observed Transfer vs.\ single-task performance. % (Code refs: settings.py, run\_single\_experiment.py)
+% :contentReference[oaicite:36]{index=36} :contentReference[oaicite:37]{index=37}
+
+\subsection{Threshold-dependent Clinical Metrics}
+At $t^\star$, we report Sensitivity, Specificity, and F1, and additionally PPV/NPV (with 95\% CIs).
+% Threshold selection: get\_best\_f1\_threshold; metric computation: get\_sens\_spec\_f1.
+% :contentReference[oaicite:38]{index=38}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
