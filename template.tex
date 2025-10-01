@@ -185,6 +185,19 @@ $^{2}$ \quad Affiliation 2; e-mail@e-mail.com}
 % \end{itemize}
 %}
 
+\newcommand{\GC}{\mathrm{GC}}
+\newcommand{\CC}{\mathrm{CC}}
+\newcommand{\EC}{\mathrm{EC}}
+\newcommand{\LC}{\mathrm{LC}}
+\newcommand{\PC}{\mathrm{PC}}
+\newcommand{\encP}{\phi}  % encoder parameters
+\newcommand{\enc}[1]{f_{#1}}
+\newcommand{\headP}[1]{\theta_{#1}}
+\newcommand{\head}[1]{h_{\headP{#1}}}
+\newcommand{\pretrainP}{\encP^\star}
+\newcommand{\preDecayC}{\lambda_{\mathrm{pre}}}  % pretraining decay coefficient
+\newcommand{\ftDecayC}{\lambda_{\mathrm{ft}}}  % FT decay coefficient
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{document}
 \section{Introduction}
@@ -275,31 +288,89 @@ Our primary objective is to \textbf{quantify how much transfer learning from non
 We therefore compare models \emph{trained only on GC (non-transfer baselines)} against models that \emph{first pre-train on multiple non-GC cancers and then fine-tune on GC (transfer)}.
 To isolate the effect of transfer, we enforce identical feature sets and preprocessing, and stratified data splits across methods. 
 
-\subsubsection{Baselines (Non-transfer).} 
-We fit (i) \textbf{Logistic Regression (LR)}; 
-(ii) \textbf{Gradient Boosting (XGBoost)}; and 
-(iii) a \textbf{scratch MLP} that is \emph{initialized randomly and trained solely on GC}. 
-These baselines establish performance without any transfer signal.
-% TODO: "establish performance without any transfer signal" <== 이 표현 수정
 
-{\color{red}
-\paragraph{Logistic Regression (LR).} With standardized features $\tilde{x}=(x-\mu)/\sigma$, LR models $p_\theta(y = 1\mid x)=\sigma(w^\top \tilde{x}+b)$; parameters minimize class-weighted cross-entropy.
-
-\paragraph{Gradient Boosting (XGBoost).} We use XGBoost with imbalance-aware weighting~\citep{Chen2016_XGBoost}.
-}
-
-\subsubsection{Multilayer Perceptron (MLP)}
- A feed-forward network with linear blocks, batch normalization, ReLU, and dropout~\citep{Ioffe2015_BN,Srivastava2014_Dropout}.
 
 \subsubsection{Transfer MLP (Multi-Head).}
-We parameterize a shared backbone $f_\phi:\mathbb{R}^d\!\to\!\mathbb{R}^h$ and cancer-specific linear heads $\{h_c:\mathbb{R}^h\!\to\!\mathbb{R}\}_{c\in\mathcal{C}}$, yielding logits $z_c(x)=h_c(f_\phi(x))$. Head strategies for GC are detailed below.
+Let $\mathcal{C}$ denote the set of \emph{non-gastric} cancers used for pretraining; in our main configuration, $\mathcal{C}=\{\CC,\EC,\LC,\PC\}$ (i.e., colorectal, esophageal, liver, and pancreatic cancers, respectively).
+For each $c\in\mathcal{C}$, let $\mathcal{D}_c=\{(x_i^{(c)},y_i^{(c)})\}_{i=1}^{N_c}$ be the corresponding case--control dataset (identical feature space across $c$), constructed with a case--control ratio of $1{:}3$ (one case per three controls).
+Here $y\in\{0,1\}$ indicates the disease status for cancer type $c$ ($y{=}1$ for \emph{case} with a confirmed diagnosis of type $c$, and $y{=}0$ for a \emph{control} without that diagnosis).
 
-\subsection{Losses, Class Imbalance, and Thresholding}
-For a logit $u$ and label $y\in\{0,1\}$, we use
+Our deep learning model consists of a shared backbone encoder $f_\phi:\mathbb{R}^{d_{\mathrm{in}}}\!\to\!\mathbb{R}^{d_h}$ with model parameters $\phi$ and cancer-specific linear heads $\{h_{\theta_c}\}_{c\in\mathcal{C}}$ acting on the latent representation $u=f_\phi(x)$ for input features $x$.
+Each head with model parameters $\theta_c=(w_c,b_c)\in\mathbb{R}^{d_h}\times\mathbb{R}$ is an affine map parameterized as
+\[
+h_{\theta_c}(u)=\langle w_c,u\rangle + b_c,
+\]
+and produces a logit $z_c(x)=h_{\theta_c}(f_\phi(x))$.
+The backbone encoder $f_\phi$ is a feed-forward network with linear blocks, batch normalization \citep{Ioffe2015_BN}, ReLU, and dropout~\citep{Srivastava2014_Dropout}.
+
+We first define the class-weighted binary cross-entropy (BCE) used throughout.
+Let $\sigma(t)=\frac{1}{1+\exp(-t)}$ denote the logistic sigmoid.
+Given a logit $z\in\mathbb{R}$ and a binary label $y\in\{0,1\}$, the per-sample loss is
 \begin{equation}
-\ell_{\mathrm{BCE}}(u,y;\alpha)=-\alpha\,y\log\sigma(u)-(1-y)\log(1-\sigma(u)),
+  \label{eq:bce}
+  \ell_{\mathrm{BCE}}(z,y;\alpha)
+  = -\,\alpha\,y\log \sigma(z)\;-\;(1-y)\log\!\big(1-\sigma(z)\big),
+  \end{equation}
+where $\alpha>0$ is the positive-class weight; in our experiments we set $\alpha=3$ to match the $1{:}3$ case--control sampling design.
+%TODO: cite: class-weighted BCE?
+
+During pretraining, we jointly optimize the backbone $f_\phi$ and all cancer-specific heads $\Theta_h\!=\!\{\theta_c\}_{c\in\mathcal{C}}$ by minimizing the mean of the weighted BCE over cancer types:
+\begin{equation}
+  \frac{1}{|\mathcal{C}|}\sum_{c\in\mathcal{C}}
+  \ \mathbb{E}_{(x,y)\sim\mathcal{D}_c}\!\big[\,\ell_{\mathrm{BCE}}(h_{\theta_c}(f_\phi(x)),y;\alpha)\,\big],
 \end{equation}
+with positive-class weight $\alpha{=}3$. 
+To reduce overfitting, we applied standard $\ell_2$-regularization
+(weight decay) with coefficient $\preDecayC$.
+Thus, the pretraining objective is
+\begin{equation}
+  \label{eq:pre_obj}
+%  \min_{\phi,\Theta_h}\ 
+  \mathcal{L}_{\mathrm{pre}}(\phi,\Theta_h)
+  = \frac{1}{|\mathcal{C}|}\sum_{c\in\mathcal{C}}
+  \mathbb{E}_{(x,y)\sim\mathcal{D}_c}\!\big[\,\ell_{\mathrm{BCE}}(h_{\theta_c}(f_\phi(x)),y;\alpha)\,\big]
+  + \preDecayC \big( \|\phi\|_2^2 + \sum_{c\in\mathcal{C}} \|\theta_c\|_2^2 \big).
+\end{equation}
+
+In practice, model training does not update the parameters using the entire dataset at once, but rather processes smaller subsets of data called \emph{mini-batches}. 
+A mini-batch is simply a small group of samples (e.g., a few dozen patients) drawn from the full dataset, and the model parameters are updated based on the gradient of the loss function computed by using only that group. 
+This strategy reduces memory requirements and stabilizes optimization compared to using a single sample (stochastic updates) or the full dataset (full-batch updates).
+During pretraining, at each optimization step we draw one mini-batch $B_c$ from \emph{each} cancer type $c\in\mathcal{C}$ and compute their respective losses. 
+The pretraining loss for a step is then obtained by averaging over all cancer types:
+\begin{equation}
+  \label{eq:pre_mix}
+  \hat{\mathcal{L}}_{\mathrm{pre}}(\phi,\Theta_h)
+  =\frac{1}{|\mathcal{C}|}\sum_{c\in\mathcal{C}}\ \frac{1}{|B_c|}\!
+  \sum_{(x,y)\in B_c}\ell_{\mathrm{BCE}}(h_{\theta_c}(f_\phi(x)),y;\alpha) 
+  + \preDecayC \Big( \|\phi\|_2^2 + \sum_{c\in\mathcal{C}} \|\theta_c\|_2^2 \Big).
+\end{equation}
+In this way, each cancer-specific head $h_{\theta_c}$ is trained using its own mini-batch, while the backbone encoder $f_\phi$ receives gradients aggregated across cancers, encouraging it to learn shared representations.
+
+\textit{Expected effect.} Type-balanced, multi-task pretraining (\cref{eq:pre_obj,eq:pre_mix}) is expected to (i) induce cancer-agnostic risk representations in $f_\phi$, (ii) improve sample efficiency and stabilize optimization when fine-tuning on gastric cancer with limited labels, and (iii) mitigate label-imbalance effects through the weighted loss in \cref{eq:bce}.
+These mechanisms are consistent with established benefits of multi-task learning and transfer learning~\citep{Caruana1997_MTL,Pan2010_TLsurvey,Yosinski2014_transferable,He2009_Imbalanced}.
+
+For training the prediction model for GC, we introduce new GC linear head $\head{\GC}:\mathbb{R}^{d_{h}}\!\to\!\mathbb{R}$ whose model parameters $\headP{\GC}$ are randomly initialized.
+By using the pretrained backbone encoder $\enc{\encP}$, the probability of GC is predicted by applying the sigmoid function $\sigma$ to the logit $\head{\GC}(\enc{\encP}(x))$ (i.e., $\sigma(\head{\GC}(\enc{\encP}(x)))$).
+Let $\pretrainP$ denote the pretrained model parameters of backbone encoder.
+For fine-tuning, we first initialize the model parameters of backbone $\encP$ to $\pretrainP$, and then jointly optimize the backbone $\enc{\encP}$ and the GC head $\head{\GC}$ by minimizing the weighted BCE for the GC dataset:
+\begin{equation}
+\label{eq:ft_obj}
+\min_{\theta}\ \mathbb{E}_{(x,y)\sim \mathcal{D}_{\GC}}\!\big[\ell_{\mathrm{BCE}}(\head{\GC}(\enc{\pretrainP}(x)),y;\alpha)\big]\;+\;\ftDecayC \big( \|\phi\|_2^2 + \sum_{c\in\mathcal{C}} \|\theta_c\|_2^2 \big),
+\end{equation}
+where we use positive-class weight $\alpha{=}3$ and $\ftDecayC$ is the $\ell_2$-regularization coefficient for fine-tuning.
+
+
+
+\begin{equation}
+  \label{eq:GC_obj}
+  \min_{\phi,\Theta_h}\ \mathcal{L}_{\mathrm{pre}}(\phi,\Theta_h)
+  \;=\;\frac{1}{|\mathcal{C}|}\sum_{c\in\mathcal{C}}
+  \ \mathbb{E}_{(x,y)\sim\mathcal{D}_c}\!\big[\,\ell_{\mathrm{BCE}}(h_{\theta_c}(f_\phi(x)),y;\alpha)\,\big],
+  \end{equation}
 with positive-class weight $\alpha{=}3$.
+
+From the logits $z_{\GC}(x)=\head{\GC}(f_\phi(x))$ from the GC head using the pretrained backbone encoder $f_\phi$ for given input features $x$.
+
 %TODO: move the below in the section of experimental results?
 %Decision thresholds are chosen on the validation set by maximizing $F_1$:
 %\begin{equation}
@@ -307,32 +378,12 @@ with positive-class weight $\alpha{=}3$.
 %\end{equation}
 
 \subsection{Multi-Cancer Pretraining}\label{sec:pretrain_multi}
-Let $\mathcal{C}$ denote the set of \emph{non-gastric} cancers used for pretraining; in our main configuration, $\mathcal{C}=\{\mathrm{C},\mathrm{E},\mathrm{L},\mathrm{P}\}$ (i.e., colorectal, esophageal, liver, and pancreatic cancers, respectively).
-For each $c\in\mathcal{C}$, let $\mathcal{D}_c=\{(x_i^{(c)},y_i^{(c)})\}_{i=1}^{N_c}$ be the corresponding case--control dataset, constructed with identical features using a case--control ratio of $1{:}3$ (one case per three controls).
+
+
+
 The final linear layer has $|\mathcal{C}|$ outputs during pretraining and is replaced with a new $1$-dimensional head during fine-tuning (to predict GC).
 
 
-
-\paragraph{Objective and type-mixed minibatches.}
-We minimize the average class-weighted binary cross-entropy over types:
-\begin{equation}
-\label{eq:pre_obj}
-\min_{\phi,\{h_c\}}\ \mathcal{L}_{\mathrm{pre}}(\phi,\{h_c\})=\frac{1}{|\mathcal{C}|}\sum_{c\in\mathcal{C}} \ \mathbb{E}_{(x,y)\sim\mathcal{D}_c}\!\big[\,\ell_{\mathrm{BCE}}(h_c(f_\phi(x)),y;\alpha)\,\big],
-\end{equation}
-with positive-class weight $\alpha{=}3$. In practice, each optimization step draws one mini-batch $B_c$ from \emph{each} $c\in\mathcal{C}$ and accumulates losses across types:
-\begin{equation}
-\label{eq:pre_mix}
-\hat{\mathcal{L}}_{\mathrm{pre}}=\frac{1}{|\mathcal{C}|}\sum_{c\in\mathcal{C}}\ \frac{1}{|B_c|}\sum_{(x,y)\in B_c}\ell_{\mathrm{BCE}}(h_c(f_\phi(x)),y;\alpha),
-\end{equation}
-so that heads specialize while gradients are shared through $f_\phi$.
-
-\paragraph{Validation across types and model selection.}
-At regular intervals (every $K$ steps), we evaluate each head on its validation split and report both per-type metrics and their mean:
-\begin{equation}
-\overline{\mathrm{AUROC}}=\frac{1}{|\mathcal{C}|}\sum_{c\in\mathcal{C}}\mathrm{AUROC}_c,\qquad
-\overline{\mathrm{AP}}=\frac{1}{|\mathcal{C}|}\sum_{c\in\mathcal{C}}\mathrm{AP}_c.
-\end{equation}
-We retain the snapshot that maximizes $\overline{\mathrm{AUROC}}$ (ties broken by $\overline{\mathrm{AP}}$). The per-type validation metrics $\{(\mathrm{AUROC}_c,\mathrm{AP}_c)\}$ are stored for GC head selection in the \texttt{best} strategy.
 
 \paragraph{Fine-tuning head strategies.}
 During GC fine-tuning we use one of three strategies to produce the scalar logit $s(x)$:
@@ -379,6 +430,23 @@ t^\star=\arg\max_{t\in[0,1]}\ \frac{2\,\mathrm{Precision}(t)\cdot\mathrm{Recall}
 \subsection{Optimization and Early Stopping}
 Neural models are optimized with Adam~\citep{Kingma2015_Adam}. Batch normalization and dropout act as regularizers~\citep{Ioffe2015_BN,Srivastava2014_Dropout}. In pretraining, validation is performed every $K$ steps and the best snapshot by $\overline{\mathrm{AUROC}}$ is retained; in fine-tuning, early stopping on validation AUROC is optional.
 
+
+\subsection{Baselines (Non-transfer).} 
+We fit (i) \textbf{Logistic Regression (LR)}; 
+(ii) \textbf{Gradient Boosting (XGBoost)}; and 
+(iii) a \textbf{scratch MLP} that is \emph{initialized randomly and trained solely on GC}. 
+These baselines establish performance without any transfer signal.
+% TODO: "establish performance without any transfer signal" <== 이 표현 수정
+
+{\color{red}
+\paragraph{Logistic Regression (LR).} With standardized features $\tilde{x}=(x-\mu)/\sigma$, LR models $p_\theta(y = 1\mid x)=\sigma(w^\top \tilde{x}+b)$; parameters minimize class-weighted cross-entropy.
+
+\paragraph{Gradient Boosting (XGBoost).} We use XGBoost with imbalance-aware weighting~\citep{Chen2016_XGBoost}.
+}
+
+\subsubsection{Multilayer Perceptron (MLP)}
+ A feed-forward network with linear blocks, batch normalization, ReLU, and dropout~\citep{Ioffe2015_BN,Srivastava2014_Dropout}.
+
 \subsection{Statistical Analysis}
 %In imbalanced settings, AP is often more informative than AUROC~\citep{Saito2015_PR}.
 For each cancer type, we first divided the subjects into training and test sets, using an 85\%--15\% split. 
@@ -423,7 +491,9 @@ PC & 1958 & 5874 & 48.6 & 56.0 [34.0–70.0] \\
 \begin{figure}[H]
 \centering
 \subfloat[AUROC]{\includegraphics[width=0.48\textwidth]{merged/fig_model_gc_rate_auroc.pdf}}
-\subfloat[AP]{\includegraphics[width=0.48\textwidth]{merged/fig_model_gc_rate_ap.pdf}}\\
+\subfloat[AP]{\includegraphics[width=0.48\textwidth]{merged/fig_model_gc_rate_ap.pdf}} \\
+%\subfloat[Sensitivity]{\includegraphics[width=0.48\textwidth]{merged/fig_model_gc_rate_sensitivity.pdf}}
+%\subfloat[Specificity]{\includegraphics[width=0.48\textwidth]{merged/fig_model_gc_rate_specificity.pdf}} \\
 \subfloat[F1]{\includegraphics[width=0.48\textwidth]{merged/fig_model_gc_rate_f1.pdf}}
 \caption{Performance across gc\_rate for LR, XGB, MLP, and Transfer (Main). Each panel shows one metric.}
 \label{fig:model-gcrate}
@@ -447,22 +517,7 @@ Sensitivity, Specificity, and F1 are computed at the validation-selected thresho
 We show mean $\pm$ SD over five seeds and 95\% CIs from patient-level bootstrap.
 Table~\ref{tab:main} presents the results.
 
-\begin{table}[t]
-\centering
-\begin{tabular}{lrrrrr}
-\toprule
-Model & AUROC & AP & Sensitivity & Specificity & F1 \\
-\midrule
-Transfer (Main) & 0.919 & 0.779 & 0.862 & 0.827 & 0.724 \\
-MLP & 0.906 & 0.766 & 0.851 & 0.781 & 0.679 \\
-LR & 0.899 & 0.737 & 0.764 & 0.839 & 0.680 \\
-XGB & 0.894 & 0.731 & 0.718 & 0.894 & 0.705 \\
-\bottomrule
-\end{tabular}
-
-\caption{Model comparison at $\textbackslash\{\}mathrm\{gc\textbackslash\{\}\_rate\}=1.0$ (best-by-validation per model). Transfer row uses Main constraints.}
-\label{tab:model-compare-gc1}
-\end{table}
+\input{merged/table_model_compare_gc1.tex}
 
 
 \begin{table}[t]
