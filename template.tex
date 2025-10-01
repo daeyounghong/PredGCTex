@@ -274,11 +274,6 @@ After removing identifier/time columns and a small list of prespecified exclusio
 Our primary objective is to \textbf{quantify how much transfer learning from non-gastric cancers improves early prediction of gastric cancer (GC)}. 
 We therefore compare models \emph{trained only on GC (non-transfer baselines)} against models that \emph{first pre-train on multiple non-GC cancers and then fine-tune on GC (transfer)}.
 To isolate the effect of transfer, we enforce identical feature sets and preprocessing, and stratified data splits across methods. 
-{\color{red}
-We report absolute performance (AUROC, AP), improvements ($\Delta$AUROC, $\Delta$AP), and data-efficiency gains under GC subsampling.
-}
-
-
 
 \subsubsection{Baselines (Non-transfer).} 
 We fit (i) \textbf{Logistic Regression (LR)}; 
@@ -291,11 +286,12 @@ These baselines establish performance without any transfer signal.
 \paragraph{Logistic Regression (LR).} With standardized features $\tilde{x}=(x-\mu)/\sigma$, LR models $p_\theta(y = 1\mid x)=\sigma(w^\top \tilde{x}+b)$; parameters minimize class-weighted cross-entropy.
 
 \paragraph{Gradient Boosting (XGBoost).} We use XGBoost with imbalance-aware weighting~\citep{Chen2016_XGBoost}.
-
-\paragraph{Multilayer Perceptron (MLP).} A feed-forward network with linear blocks, batch normalization, ReLU, and dropout~\citep{Ioffe2015_BN,Srivastava2014_Dropout}.
 }
 
-\paragraph{Transfer MLP (Multi-Head).}
+\subsubsection{Multilayer Perceptron (MLP)}
+ A feed-forward network with linear blocks, batch normalization, ReLU, and dropout~\citep{Ioffe2015_BN,Srivastava2014_Dropout}.
+
+\subsubsection{Transfer MLP (Multi-Head).}
 We parameterize a shared backbone $f_\phi:\mathbb{R}^d\!\to\!\mathbb{R}^h$ and cancer-specific linear heads $\{h_c:\mathbb{R}^h\!\to\!\mathbb{R}\}_{c\in\mathcal{C}}$, yielding logits $z_c(x)=h_c(f_\phi(x))$. Head strategies for GC are detailed below.
 
 \subsection{Losses, Class Imbalance, and Thresholding}
@@ -384,16 +380,18 @@ t^\star=\arg\max_{t\in[0,1]}\ \frac{2\,\mathrm{Precision}(t)\cdot\mathrm{Recall}
 Neural models are optimized with Adam~\citep{Kingma2015_Adam}. Batch normalization and dropout act as regularizers~\citep{Ioffe2015_BN,Srivastava2014_Dropout}. In pretraining, validation is performed every $K$ steps and the best snapshot by $\overline{\mathrm{AUROC}}$ is retained; in fine-tuning, early stopping on validation AUROC is optional.
 
 \subsection{Statistical Analysis}
-{\color{red}
-Primary metrics are AUROC and AP, with sensitivity and specificity reported at $t^\star$. In imbalanced settings, AP is often more informative than AUROC~\citep{Saito2015_PR}.
-}
-
+%In imbalanced settings, AP is often more informative than AUROC~\citep{Saito2015_PR}.
 For each cancer type, we first divided the subjects into training and test sets, using an 85\%--15\% split. 
 We further split the training set so that 20\% of it was used as a validation set. 
 In all splits, stratified sampling was performed to ensure that the proportion of cases and controls remained consistent across the training, validation, and test sets. 
-Feature standardization was carried out by computing the mean and standard deviation from the training set, and the same mean and standard deviation were then applied to both the validation and test sets for the standardization.
+For a given hyperparameter setting, we trained model parameters using the training set, and computed the model performances for the validation and test sets. 
+The evaluation metrics included the area under the receiver operating characteristic curve (AUROC), average precision (AP), sensitivity, specificity, and F1-score. 
+This entire procedure was repeated 10 times with different random seeds, which influence aspects such as parameter initialization and mini-batch sampling, potentially leading to variability in the training process. 
+To optimize hyperparameters, we computed the mean AUROC on the validation set across these repetitions and selected hyperparameters based on this mean AUROC. 
+The final model performance was then evaluated on the independent test split, and we report the mean performance across the 10 repetitions as the final test result. 
 
-We repeated the procedure 10 times and reported the mean performance on the testing set with different random seeds, which influences aspects such as parameter initialization and mini-batch sampling, potentially leading to variability in the training process.
+
+%TODO: explaining metrics
 
 \section{Results}
 
