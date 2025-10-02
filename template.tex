@@ -350,26 +350,19 @@ In this way, each cancer-specific head $h_{\theta_c}$ is trained using its own m
 These mechanisms are consistent with established benefits of multi-task learning and transfer learning~\citep{Caruana1997_MTL,Pan2010_TLsurvey,Yosinski2014_transferable,He2009_Imbalanced}.
 
 For training the prediction model for GC, we introduce new GC linear head $\head{\GC}:\mathbb{R}^{d_{h}}\!\to\!\mathbb{R}$ whose model parameters $\headP{\GC}$ are randomly initialized.
-By using the pretrained backbone encoder $\enc{\encP}$, the probability of GC is predicted by applying the sigmoid function $\sigma$ to the logit $\head{\GC}(\enc{\encP}(x))$ (i.e., $\sigma(\head{\GC}(\enc{\encP}(x)))$).
+For input features $x$, by using the pretrained backbone encoder $\enc{\encP}$, the probability of GC is predicted by applying the sigmoid function $\sigma$ to the logit $\head{\GC}(\enc{\encP}(x))$ (i.e., $\sigma(\head{\GC}(\enc{\encP}(x)))$).
 Let $\pretrainP$ denote the pretrained model parameters of backbone encoder.
 For fine-tuning, we first initialize the model parameters of backbone $\encP$ to $\pretrainP$, and then jointly optimize the backbone $\enc{\encP}$ and the GC head $\head{\GC}$ by minimizing the weighted BCE for the GC dataset:
 \begin{equation}
 \label{eq:ft_obj}
-\min_{\theta}\ \mathbb{E}_{(x,y)\sim \mathcal{D}_{\GC}}\!\big[\ell_{\mathrm{BCE}}(\head{\GC}(\enc{\pretrainP}(x)),y;\alpha)\big]\;+\;\ftDecayC \big( \|\phi\|_2^2 + \sum_{c\in\mathcal{C}} \|\theta_c\|_2^2 \big),
+\mathcal{L}_{\mathrm{ft}}(\phi,\headP{\GC}) = \mathbb{E}_{(x,y)\sim \mathcal{D}_{\GC}}\!\big[\ell_{\mathrm{BCE}}(\head{\GC}(\enc{\pretrainP}(x)),y;\alpha)\big]\;+\;\ftDecayC \big( \|\phi\|_2^2 + \|\headP{\GC}\|_2^2 \big),
 \end{equation}
 where we use positive-class weight $\alpha{=}3$ and $\ftDecayC$ is the $\ell_2$-regularization coefficient for fine-tuning.
 
-
-
-\begin{equation}
-  \label{eq:GC_obj}
-  \min_{\phi,\Theta_h}\ \mathcal{L}_{\mathrm{pre}}(\phi,\Theta_h)
-  \;=\;\frac{1}{|\mathcal{C}|}\sum_{c\in\mathcal{C}}
-  \ \mathbb{E}_{(x,y)\sim\mathcal{D}_c}\!\big[\,\ell_{\mathrm{BCE}}(h_{\theta_c}(f_\phi(x)),y;\alpha)\,\big],
-  \end{equation}
-with positive-class weight $\alpha{=}3$.
-
-From the logits $z_{\GC}(x)=\head{\GC}(f_\phi(x))$ from the GC head using the pretrained backbone encoder $f_\phi$ for given input features $x$.
+%% TODO: cite Adam
+%For pretraining and fine-tuning phases, we optimize model parameters using the Adam optimizer with separate learning rates and $\ell_2$-regularization coefficients $\preDecayC$ and $\ftDecayC$.
+%The mini-batch size is set to $\lfloor 0.2 \cdot N_c \rfloor$ capped to $[8,64]$ where $N_c$ is the data size for cancer type $c \in \{\CC,\EC,\LC,\PC,\GC\}$.
+%All tasks share the positive-class weight $\alpha = 3$ in $\ell_{\mathrm{BCE}}$.
 
 %TODO: move the below in the section of experimental results?
 %Decision thresholds are chosen on the validation set by maximizing $F_1$:
@@ -377,61 +370,33 @@ From the logits $z_{\GC}(x)=\head{\GC}(f_\phi(x))$ from the GC head using the pr
 %t^\star=\arg\max_{t\in[0,1]}\ \frac{2\,\mathrm{Precision}(t)\cdot\mathrm{Recall}(t)}{\mathrm{Precision}(t)+\mathrm{Recall}(t)}.
 %\end{equation}
 
-\subsection{Multi-Cancer Pretraining}\label{sec:pretrain_multi}
+\subsubsection{Baselines (Non-transfer)}
+We benchmark three widely used non-transfer families that reflect complementary inductive biases for structured EHR data \citep{EHRBreastRecurrence2023}. To avoid conflating modeling choices with pretraining, all baselines use the identical feature set, preprocessing, and stratified data splits as the Transfer MLP.
+
+\subparagraph{Logistic Regression (LR).}
+A linear probabilistic classifier that models the log-odds of GC as an affine function of the inputs, offering a strong, interpretable tabular baseline. LR captures additive effects and provides well-calibrated risk estimates under mild assumptions, making it a common comparator in clinical prediction studies.
+
+\subparagraph{Gradient-Boosted Trees (XGBoost).}
+An ensemble of decision trees trained by gradient boosting to approximate non-linear decision boundaries and higher-order feature interactions on tabular data. This class of models is competitive on EHR tasks due to its flexibility with mixed-scale features and robustness to outliers and sparse signals.
+
+\subparagraph{MLP trained from scratch (Non-transfer MLP).}
+To isolate the effect of transfer learning, we also evaluate a multilayer perceptron that is \emph{architecturally identical} to the Transfer MLP’s backbone and GC head (linear blocks with batch normalization, ReLU, and dropout), and uses the \emph{same} training objective, mini-batch formulation, and regularization as in fine-tuning. The \textbf{only} difference is that the pretraining stage on non-GC cancers is \emph{omitted}: all parameters are randomly initialized and optimized solely on the GC dataset. Conceptually, this baseline serves as an \emph{ablation} of the Transfer MLP in which the pretraining component is removed; thus, any performance gap directly quantifies the benefit of transfer.
+
+
+We benchmark against three widely used non-transfer families that reflect different ways of learning patterns from structured electronic health record (EHR) data. 
+First, \textbf{logistic regression (LR)} represents a linear probabilistic classifier that models the log-odds of the outcome as a linear combination of the input features. 
+Second, \textbf{gradient-boosted trees (XGBoost, XGB)} provide a strong nonlinear ensemble method based on decision trees, widely adopted in tabular biomedical prediction tasks for their ability to capture complex feature interactions.
+
+Finally, we include a \textbf{non-transfer multilayer perceptron (MLP)} baseline. 
+This model employs the exact same feed-forward neural architecture as the Transfer MLP (a shared encoder with linear layers, batch normalization, ReLU, and dropout), but differs critically in that it omits the pretraining phase on non-GC cancers and is instead trained from scratch directly on the GC dataset. 
+Thus, the non-transfer MLP can be viewed as an ablation of the Transfer MLP where the benefit of pretraining is removed, enabling us to isolate the added value of transfer learning itself.
+
+We benchmark against three widely used non-transfer families that reflect different ways of learning patterns from structured electronic health record (EHR) data: a linear probabilistic classifier (logistic regression), an ensemble of decision trees (gradient-boosted trees, instantiated as XGBoost), and a feed-forward neural network trained from scratch (multilayer perceptron, MLP).
+These model classes are among the most commonly reported in oncology prediction studies using EHRs \citep{EHRBreastRecurrence2023}.
+In particular, the non-transfer MLP employs the same feed-forward neural architecture as the Transfer MLP (shared encoder with linear layers, batch normalization, ReLU, and dropout), but differs in that it is trained from scratch directly on the GC dataset without any pretraining on non-GC cancer datasets.
 
 
 
-The final linear layer has $|\mathcal{C}|$ outputs during pretraining and is replaced with a new $1$-dimensional head during fine-tuning (to predict GC).
-
-
-
-\paragraph{Fine-tuning head strategies.}
-During GC fine-tuning we use one of three strategies to produce the scalar logit $s(x)$:
-\begin{align}
-\texttt{avg:}\quad & s(x)=\frac{1}{|\mathcal{C}|}\sum_{c\in\mathcal{C}} z_c(x),\\
-\texttt{best:}\quad & s(x)=z_{\hat c}(x),\ \ \hat c=\arg\max_{c\in\mathcal{C}}\big(\mathrm{AUROC}_c,\mathrm{AP}_c\big),\\
-\texttt{new:}\quad & s(x)=z_G(x),\ \ \text{extend the last layer to include a new GC head.}
-\end{align}
-In \texttt{new}, the GC head is randomly initialized; in all modes, the shared backbone is initialized from pretraining.
-
-\paragraph{L2-SP anchoring and trainable sets.}
-We regularize the distance to the pretrained parameters $\theta^\star$ using the L2-SP penalty~\citep{Li2018_L2SP}:
-\begin{equation}
-\Omega_{\mathrm{L2\text{-}SP}}(\theta)=\sum_{j\in\mathcal{S}}\|\theta_j-\theta^\star_j\|_2^2,
-\end{equation}
-where $\mathcal{S}$ excludes biases; in \texttt{new} we also exclude the expanded final linear layer so that the new GC head is unconstrained. The GC fine-tuning objective is
-\begin{equation}
-\label{eq:ft_obj}
-\min_{\theta}\ \mathbb{E}_{(x,y)\sim \mathcal{D}_G}\!\big[\ell_{\mathrm{BCE}}(s(x),y;\alpha)\big]\;+\;\lambda\,\Omega_{\mathrm{L2\text{-}SP}}(\theta).
-\end{equation}
-When \texttt{ft\_head\_only} is enabled, a gradient mask restricts updates to the selected row of the final linear layer (the shared backbone runs in inference mode for weight updates).
-
-\paragraph{Batch size, imbalance, and schedules.}
-Mini-batch size is either fixed at $64$ or set to $\lfloor \texttt{mb\_rate}\cdot N\rfloor$ (capped to $[8,64]$). All tasks share $\alpha{=}3$ in $\ell_{\mathrm{BCE}}$. Adam optimizes both phases with separate learning rates/decays $(\texttt{pre\_lr},\texttt{pre\_weight\_decay})$ and $(\texttt{ft\_lr},\texttt{ft\_weight\_decay})$.
-
-\subparagraph{Summary.}
-\begin{enumerate}[topsep=0pt,itemsep=1pt,leftmargin=12pt]
-\item Build per-type loaders for each $c\in\mathcal{C}$; initialize $f_\phi$ and $\{h_c\}$.
-\item For $t=1\ldots T$: draw one batch from each loader; compute \eqref{eq:pre_mix}; update parameters.
-\item Every $K$ steps: compute per-type and mean validation metrics; select the best snapshot.
-\item Save weights and per-type metrics; proceed to GC fine-tuning with \texttt{avg}/\texttt{best}/\texttt{new} and (optionally) L2-SP.
-\end{enumerate}
-
-\subsection{Losses, Class Imbalance, and Thresholding}
-For a logit $u$ and label $y\in\{0,1\}$, we use
-\begin{equation}
-\ell_{\mathrm{BCE}}(u,y;\alpha)=-\alpha\,y\log\sigma(u)-(1-y)\log(1-\sigma(u)),
-\end{equation}
-with positive-class weight $\alpha{=}3$. Decision thresholds are chosen on the validation set by maximizing $F_1$:
-\begin{equation}
-t^\star=\arg\max_{t\in[0,1]}\ \frac{2\,\mathrm{Precision}(t)\cdot\mathrm{Recall}(t)}{\mathrm{Precision}(t)+\mathrm{Recall}(t)}.
-\end{equation}
-
-\subsection{Optimization and Early Stopping}
-Neural models are optimized with Adam~\citep{Kingma2015_Adam}. Batch normalization and dropout act as regularizers~\citep{Ioffe2015_BN,Srivastava2014_Dropout}. In pretraining, validation is performed every $K$ steps and the best snapshot by $\overline{\mathrm{AUROC}}$ is retained; in fine-tuning, early stopping on validation AUROC is optional.
-
-
-\subsection{Baselines (Non-transfer).} 
 We fit (i) \textbf{Logistic Regression (LR)}; 
 (ii) \textbf{Gradient Boosting (XGBoost)}; and 
 (iii) a \textbf{scratch MLP} that is \emph{initialized randomly and trained solely on GC}. 
@@ -458,6 +423,7 @@ This entire procedure was repeated 10 times with different random seeds, which i
 To optimize hyperparameters, we computed the mean AUROC on the validation set across these repetitions and selected hyperparameters based on this mean AUROC. 
 The final model performance was then evaluated on the independent test split, and we report the mean performance across the 10 repetitions as the final test result. 
 
+% TODO: decision threshold
 
 %TODO: explaining metrics
 
