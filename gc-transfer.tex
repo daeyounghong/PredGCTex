@@ -2,7 +2,7 @@
 %  For support, please attach all files needed for compiling as well as the log file, and specify your operating system, LaTeX version, and LaTeX editor.
 
 %=================================================================
-\documentclass[journal,article,submit,pdftex,moreauthors]{Definitions/mdpi} 
+\documentclass[diagnostics,article,submit,pdftex,moreauthors]{Definitions/mdpi} 
 %\documentclass[preprints,article,submit,pdftex,moreauthors]{Definitions/mdpi} 
 % For posting an early version of this manuscript as a preprint, you may use "preprints" as the journal. Changing "submit" to "accept" before posting will remove line numbers.
 
@@ -77,22 +77,22 @@
 
 %=================================================================
 % Full title of the paper (Capitalized)
-\Title{Title}
+\Title{Early Prediction of Gastric Cancer Using Transfer Learning from Non-Gastric Cancers}
 
 % MDPI internal command: Title for citation in the left column
 \TitleCitation{Title}
 
 % Author Orchid ID: enter ID or remove command
-\newcommand{\orcidauthorA}{0000-0000-0000-000X} % Add \orcidA{} behind the author's name
+\newcommand{\orcidauthorA}{0000-0003-3002-1972} % Add \orcidA{} behind the author's name
 %\newcommand{\orcidauthorB}{0000-0000-0000-000X} % Add \orcidB{} behind the author's name
 
 % Authors, for the paper (add full first names)
-\Author{Firstname Lastname $^{1}$\orcidA{}, Firstname Lastname $^{2}$ and Firstname Lastname $^{2,}$*}
+\Author{Daeyoung Hong $^{1,}$*\orcidA{}, Jiung Kim $^{1}$ and Jiyong Jung $^{1}$}
 
 %\longauthorlist{yes}
 
 % MDPI internal command: Authors, for metadata in PDF
-\AuthorNames{Firstname Lastname, Firstname Lastname and Firstname Lastname}
+\AuthorNames{Daeyoung Hong, Jiung Kim and Jiyong Jung}
 
 % MDPI internal command: Authors, for citation in the left column, only choose below one of them according to the journal style
 % If this is a Chicago style journal 
@@ -116,12 +116,12 @@
 }
 
 % Affiliations / Addresses (Add [1] after \address if there is only one affiliation.)
-\address{%
-$^{1}$ \quad Affiliation 1; e-mail@e-mail.com\\
-$^{2}$ \quad Affiliation 2; e-mail@e-mail.com}
+\address[1]{%
+School of Software Convergence, Myongji University, Seoul 03674, Republic of Korea; jiung8758@gmail.com (J.K.); jiyongj954@gmail.com (J.J.)}
+%\\$^{2}$ \quad Affiliation 2; e-mail@e-mail.com}
 
 % Contact information of the corresponding author
-\corres{Correspondence: e-mail@e-mail.com; Tel.: (optional; include country code; if there are multiple corresponding authors, add author initials) +xx-xxxx-xxx-xxxx (F.L.)}
+\corres{Correspondence: dyhong@mju.ac.kr}
 
 % Current address and/or shared authorship
 %\firstnote{Current address: Affiliation.}  
@@ -232,7 +232,7 @@ Transfer learning offers a principled way to mitigate data scarcity by reusing s
 \section{Related Work}
 {
 \color{red}
-Population-scale screening and claims cohorts have enabled the development of GC risk models using noninvasive, routinely available variables. Using the Korean National Health Insurance Service screening data (2013--2014) with 10{,}515{,}949 adults and 5-year follow-up, Park et~al.\ trained several algorithms and found that logistic regression achieved the highest discrimination (internal AUROC 0.708; external AUROC 0.669); they further applied SHAP to highlight age, sex, \textit{Helicobacter pylori} infection, smoking, and family history as the top contributors \citep{park2024crt}. Class imbalance was addressed via ROSE oversampling, and multiple imputation (MICE) supported robustness analyses \citep{park2024crt}.
+Population-scale screening and claims cohorts have enabled the development of GC risk models using noninvasive, routinely available variables. Using the Korean National Health Insurance Service screening data (2013--2014) with 10{,}515{,}949 adults and 5-year follow-up, Park et~al.\ trained several algorithms and found that logistic regression achieved the highest discrimination (internal AUROC 0.708; external AUROC 0.669); they further applied SHAP to highlight age, sex, \textit{Helicobacter pylori} infection, smoking, and family history as the top contributors \citep{park2024SHapley}. Class imbalance was addressed via ROSE oversampling, and multiple imputation (MICE) supported robustness analyses \citep{park2024SHapley}.
 
 A complementary line of work develops EHR-only models that avoid endoscopy/pathology so they can be deployed to broader US populations. Kim et~al.\ built a multivariable logistic regression model for noncardia GC (NCGC) using a large multi-state EHR; after multiple imputation, the 0.632 estimator of AUC was 0.731. They reported threshold-dependent operating points (e.g., specificity $\approx90\%$ at PPV $\approx1\%$) and discussed pragmatic EHR limitations such as missingness and the poor capture of key risk factors (e.g., H.\ pylori, alcohol use) \citep{kim2024gastha}.
 
@@ -255,7 +255,7 @@ In this study, we constructed cohorts not only for gastric cancer (GC) but also 
 This design emphasizes that our approach leverages diverse cancer types for pre-training before fine-tuning on GC.
 Throughout, we use the codes to denote cancer types: \textbf{GC} = gastric cancer (target task), \textbf{CC} = colorectal cancer, \textbf{EC} = esophageal cancer, \textbf{LC} = liver cancer, and \textbf{PC} = pancreatic cancer.
 
-For each cancer, we identified cases by the earliest qualifying ICD-9/10 diagnosis (prefix lists for GC and four non-GC cancers) and sampled controls at a fixed $1{:}3$ case:control ratio, excluding subjects with the target cancer.
+For each cancer, we identified cases by the earliest qualifying ICD-9/10 diagnosis and sampled controls at a fixed $1{:}3$ case:control ratio, excluding subjects with the target cancer.
 The GC index time $t_G$ is the first GC diagnosis; for non-GC cancers $c\in\{\mathrm{CC},\mathrm{EC},\mathrm{LC},\mathrm{PC}\}$ we analogously define $t_c$.
 Features include demographics (age, sex), binary ICD-derived comorbidity indicators (e.g., diabetes, GERD, ulcers), and the most recent values of routine laboratory tests (CBC/chemistry) in a $\pm 30$-day window around the index time (or all available values for controls).
 Identical preprocessing is applied to cases and controls; numerical features are standardized by removing the mean and scaling to unit variance using statistics on the training split only.
@@ -371,46 +371,17 @@ where we use positive-class weight $\alpha{=}3$ and $\ftDecayC$ is the $\ell_2$-
 %\end{equation}
 
 \subsubsection{Baselines (Non-transfer)}
-We benchmark three widely used non-transfer families that reflect complementary inductive biases for structured EHR data \citep{EHRBreastRecurrence2023}. To avoid conflating modeling choices with pretraining, all baselines use the identical feature set, preprocessing, and stratified data splits as the Transfer MLP.
+We benchmark three widely used non-transfer families that reflect complementary inductive biases for structured EHR data \citep{EHRBreastRecurrence2023,WANG2023Prostate,park2024SHapley}. To avoid conflating modeling choices with pretraining, all baselines use the identical feature set, preprocessing, and stratified data splits as the Transfer MLP.
 
-\subparagraph{Logistic Regression (LR).}
+\subparagraph{Logistic Regression (LR)}
 A linear probabilistic classifier that models the log-odds of GC as an affine function of the inputs, offering a strong, interpretable tabular baseline. LR captures additive effects and provides well-calibrated risk estimates under mild assumptions, making it a common comparator in clinical prediction studies.
 
-\subparagraph{Gradient-Boosted Trees (XGBoost).}
+\subparagraph{Gradient-Boosted Trees (XGBoost)}
 An ensemble of decision trees trained by gradient boosting to approximate non-linear decision boundaries and higher-order feature interactions on tabular data. This class of models is competitive on EHR tasks due to its flexibility with mixed-scale features and robustness to outliers and sparse signals.
 
-\subparagraph{MLP trained from scratch (Non-transfer MLP).}
-To isolate the effect of transfer learning, we also evaluate a multilayer perceptron that is \emph{architecturally identical} to the Transfer MLP’s backbone and GC head (linear blocks with batch normalization, ReLU, and dropout), and uses the \emph{same} training objective, mini-batch formulation, and regularization as in fine-tuning. The \textbf{only} difference is that the pretraining stage on non-GC cancers is \emph{omitted}: all parameters are randomly initialized and optimized solely on the GC dataset. Conceptually, this baseline serves as an \emph{ablation} of the Transfer MLP in which the pretraining component is removed; thus, any performance gap directly quantifies the benefit of transfer.
+\subparagraph{MLP trained from scratch (Non-transfer MLP)}
+To isolate the effect of transfer learning, we also evaluate a multilayer perceptron that is \emph{architecturally identical} to the Transfer MLP’s backbone and GC head (linear blocks with batch normalization, ReLU, and dropout), and uses the \emph{same} training objective, mini-batch formulation, and regularization as in fine-tuning. The only difference is that the pretraining stage on non-GC cancer datasets is \emph{omitted}: all parameters are randomly initialized and optimized solely on the GC dataset. Conceptually, this baseline serves as an \emph{ablation} of the Transfer MLP in which the pretraining component is removed; thus, any performance gap directly quantifies the benefit of transfer.
 
-
-We benchmark against three widely used non-transfer families that reflect different ways of learning patterns from structured electronic health record (EHR) data. 
-First, \textbf{logistic regression (LR)} represents a linear probabilistic classifier that models the log-odds of the outcome as a linear combination of the input features. 
-Second, \textbf{gradient-boosted trees (XGBoost, XGB)} provide a strong nonlinear ensemble method based on decision trees, widely adopted in tabular biomedical prediction tasks for their ability to capture complex feature interactions.
-
-Finally, we include a \textbf{non-transfer multilayer perceptron (MLP)} baseline. 
-This model employs the exact same feed-forward neural architecture as the Transfer MLP (a shared encoder with linear layers, batch normalization, ReLU, and dropout), but differs critically in that it omits the pretraining phase on non-GC cancers and is instead trained from scratch directly on the GC dataset. 
-Thus, the non-transfer MLP can be viewed as an ablation of the Transfer MLP where the benefit of pretraining is removed, enabling us to isolate the added value of transfer learning itself.
-
-We benchmark against three widely used non-transfer families that reflect different ways of learning patterns from structured electronic health record (EHR) data: a linear probabilistic classifier (logistic regression), an ensemble of decision trees (gradient-boosted trees, instantiated as XGBoost), and a feed-forward neural network trained from scratch (multilayer perceptron, MLP).
-These model classes are among the most commonly reported in oncology prediction studies using EHRs \citep{EHRBreastRecurrence2023}.
-In particular, the non-transfer MLP employs the same feed-forward neural architecture as the Transfer MLP (shared encoder with linear layers, batch normalization, ReLU, and dropout), but differs in that it is trained from scratch directly on the GC dataset without any pretraining on non-GC cancer datasets.
-
-
-
-We fit (i) \textbf{Logistic Regression (LR)}; 
-(ii) \textbf{Gradient Boosting (XGBoost)}; and 
-(iii) a \textbf{scratch MLP} that is \emph{initialized randomly and trained solely on GC}. 
-These baselines establish performance without any transfer signal.
-% TODO: "establish performance without any transfer signal" <== 이 표현 수정
-
-{\color{red}
-\paragraph{Logistic Regression (LR).} With standardized features $\tilde{x}=(x-\mu)/\sigma$, LR models $p_\theta(y = 1\mid x)=\sigma(w^\top \tilde{x}+b)$; parameters minimize class-weighted cross-entropy.
-
-\paragraph{Gradient Boosting (XGBoost).} We use XGBoost with imbalance-aware weighting~\citep{Chen2016_XGBoost}.
-}
-
-\subsubsection{Multilayer Perceptron (MLP)}
- A feed-forward network with linear blocks, batch normalization, ReLU, and dropout~\citep{Ioffe2015_BN,Srivastava2014_Dropout}.
 
 \subsection{Statistical Analysis}
 %In imbalanced settings, AP is often more informative than AUROC~\citep{Saito2015_PR}.
@@ -419,7 +390,7 @@ We further split the training set so that 20\% of it was used as a validation se
 In all splits, stratified sampling was performed to ensure that the proportion of cases and controls remained consistent across the training, validation, and test sets. 
 For a given hyperparameter setting, we trained model parameters using the training set, and computed the model performances for the validation and test sets. 
 The evaluation metrics included the area under the receiver operating characteristic curve (AUROC), average precision (AP), sensitivity, specificity, and F1-score. 
-This entire procedure was repeated 10 times with different random seeds, which influence aspects such as parameter initialization and mini-batch sampling, potentially leading to variability in the training process. 
+This entire procedure was repeated 10 times with different data splits, which influence aspects such as parameter initialization and mini-batch sampling, potentially leading to variability in the training process. 
 To optimize hyperparameters, we computed the mean AUROC on the validation set across these repetitions and selected hyperparameters based on this mean AUROC. 
 The final model performance was then evaluated on the independent test split, and we report the mean performance across the 10 repetitions as the final test result. 
 
@@ -456,20 +427,24 @@ PC & 1958 & 5874 & 48.6 & 56.0 [34.0–70.0] \\
 
 \begin{figure}[H]
 \centering
-\subfloat[AUROC]{\includegraphics[width=0.48\textwidth]{merged/fig_model_gc_rate_auroc.pdf}}
-\subfloat[AP]{\includegraphics[width=0.48\textwidth]{merged/fig_model_gc_rate_ap.pdf}} \\
-%\subfloat[Sensitivity]{\includegraphics[width=0.48\textwidth]{merged/fig_model_gc_rate_sensitivity.pdf}}
-%\subfloat[Specificity]{\includegraphics[width=0.48\textwidth]{merged/fig_model_gc_rate_specificity.pdf}} \\
-\subfloat[F1]{\includegraphics[width=0.48\textwidth]{merged/fig_model_gc_rate_f1.pdf}}
+\subfloat[AUROC]{\includegraphics[width=0.48\textwidth]{tex_and_figs/fig_model_gc_rate_auroc.pdf}}
+\subfloat[AP]{\includegraphics[width=0.48\textwidth]{tex_and_figs/fig_model_gc_rate_ap.pdf}} \\
+%\subfloat[Sensitivity]{\includegraphics[width=0.48\textwidth]{tex_and_figs/fig_model_gc_rate_sensitivity.pdf}}
+%\subfloat[Specificity]{\includegraphics[width=0.48\textwidth]{tex_and_figs/fig_model_gc_rate_specificity.pdf}} \\
+\subfloat[F1]{\includegraphics[width=0.48\textwidth]{tex_and_figs/fig_model_gc_rate_f1.pdf}}
 \caption{Performance across gc\_rate for LR, XGB, MLP, and Transfer (Main). Each panel shows one metric.}
 \label{fig:model-gcrate}
 \end{figure}
 
+\newcommand{\oldDir}{old/tex_and_figs-004}
+
 \begin{figure}[H]
 \centering
-\subfloat[AUROC]{\includegraphics[width=0.48\textwidth]{merged/fig_transfer_combo_gc_rate_auroc.pdf}}
-\subfloat[AP]{\includegraphics[width=0.48\textwidth]{merged/fig_transfer_combo_gc_rate_ap.pdf}}\\
-\subfloat[F1]{\includegraphics[width=0.48\textwidth]{merged/fig_transfer_combo_gc_rate_f1.pdf}}
+\subfloat[AUROC]{\includegraphics[width=0.48\textwidth]{\oldDir/fig_transfer_combo_gc_rate_auroc.pdf}}
+\subfloat[AP]{\includegraphics[width=0.48\textwidth]{\oldDir/fig_transfer_combo_gc_rate_ap.pdf}}\\
+\subfloat[AUROC]{\includegraphics[width=0.48\textwidth]{tex_and_figs/fig_transfer_combo_gc_rate_auroc.pdf}}
+\subfloat[AP]{\includegraphics[width=0.48\textwidth]{tex_and_figs/fig_transfer_combo_gc_rate_ap.pdf}}\\
+\subfloat[F1]{\includegraphics[width=0.48\textwidth]{tex_and_figs/fig_transfer_combo_gc_rate_f1.pdf}}
 \caption{Effect of \texttt{ft\_head\_only}/\texttt{sp\_reg} across gc\_rate under head\_mode=new and CC+EC+LC+PC pretraining. Lines: main (True/False), False/True, False/False.}
 \label{fig:transfer-combo-gcrate}
 \end{figure}
@@ -483,7 +458,24 @@ Sensitivity, Specificity, and F1 are computed at the validation-selected thresho
 We show mean $\pm$ SD over five seeds and 95\% CIs from patient-level bootstrap.
 Table~\ref{tab:main} presents the results.
 
-\input{merged/table_model_compare_gc1.tex}
+\input{tex_and_figs/table_model_compare_gc1.tex}
+%\begin{table}[t]
+%\centering
+%\small
+%\begin{tabular}{lrrrrr}
+%\toprule
+%Model & AUROC & AP & Sensitivity & Specificity & F1 \\
+%\midrule
+%LR & 0.899 & 0.737 & 0.809 & 0.805 & 0.677 \\
+%XGB & 0.894 & 0.731 & 0.845 & 0.824 & 0.713 \\
+%MLP & 0.906 & 0.766 & 0.847 & 0.788 & 0.683 \\
+%Transfer & 0.920 & 0.780 & 0.893 & 0.790 & 0.709 \\
+%\bottomrule
+%\end{tabular}
+%\caption{Performance of models.}
+%\label{tab:model-compare-gc1}
+%\end{table}
+
 
 
 \begin{table}[t]
@@ -581,11 +573,6 @@ Authors should discuss the results and how they can be interpreted from the pers
 This section is not mandatory, but can be added to the manuscript if the discussion is unusually long or complex.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Patents}
-
-This section is not mandatory, but may be added if there are patents resulting from the work reported in this manuscript.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \vspace{6pt} 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -616,17 +603,18 @@ This section is not mandatory, but may be added if there are patents resulting f
 %}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\authorcontributions{For research articles with several authors, a short paragraph specifying their individual contributions must be provided. The following statements should be used ``Conceptualization, X.X. and Y.Y.; methodology, X.X.; software, X.X.; validation, X.X., Y.Y. and Z.Z.; formal analysis, X.X.; investigation, X.X.; resources, X.X.; data curation, X.X.; writing---original draft preparation, X.X.; writing---review and editing, X.X.; visualization, X.X.; supervision, X.X.; project administration, X.X.; funding acquisition, Y.Y. All authors have read and agreed to the published version of the manuscript.'', please turn to the  \href{http://img.mdpi.org/data/contributor-role-instruction.pdf}{CRediT taxonomy} for the term explanation. Authorship must be limited to those who have contributed substantially to the work~reported.}
+\authorcontributions{Conceptualization, D.H.; methodology, D.H., J.K. and J.J.; software, D.H., J.K. and J.J.; formal analysis, D.H., J.K. and J.J.; investigation, D.H., J.K. and J.J.; resources, D.H.; data curation, D.H., J.K. and J.J.; writing---original draft, D.H.; supervision, D.H.
+All authors have read and agreed to the published version of the manuscript.}
 
-\funding{Please add: ``This research received no external funding'' or ``This research was funded by NAME OF FUNDER grant number XXX.'' and  and ``The APC was funded by XXX''. Check carefully that the details given are accurate and use the standard spelling of funding agency names at \url{https://search.crossref.org/funding}, any errors may affect your future funding.}
+\funding{This study was supported by the National R\&D Program for Cancer Control through the National Cancer Center(NCC) funded by the Ministry of Health \& Welfare, Republic of Korea(RS-2025-02264000).
+This work was also supported by 2024 Research Fund of Myongji University.}
 
-\institutionalreview{In this section, you should add the Institutional Review Board Statement and approval number, if relevant to your study. You might choose to exclude this statement if the study did not require ethical approval. Please note that the Editorial Office might ask you for further information. Please add “The study was conducted in accordance with the Declaration of Helsinki, and approved by the Institutional Review Board (or Ethics Committee) of NAME OF INSTITUTE (protocol code XXX and date of approval).” for studies involving humans. OR “The animal study protocol was approved by the Institutional Review Board (or Ethics Committee) of NAME OF INSTITUTE (protocol code XXX and date of approval).” for studies involving animals. OR “Ethical review and approval were waived for this study due to REASON (please provide a detailed justification).” OR “Not applicable” for studies not involving humans or animals.}
+\institutionalreview{Ethical review and approval were waived for this study by the Institutional Review Board of Myongji University (IRB No. MJU 2025-09-001, approval date: 23 September 2025), because the research used only publicly available data (MIMIC-IV database) and did not involve the direct recruitment of human participants. The study was conducted in accordance with the Declaration of Helsinki.}
 
-\informedconsent{Any research article describing a study involving humans should contain this statement. Please add ``Informed consent was obtained from all subjects involved in the study.'' OR ``Patient consent was waived due to REASON (please provide a detailed justification).'' OR ``Not applicable'' for studies not involving humans. You might also choose to exclude this statement if the study did not involve humans.
+\informedconsent{Patient consent was waived because the study was an analysis of a third-party anonymized publicly available database.}
 
-Written informed consent for publication must be obtained from participating patients who can be identified (including by the patients themselves). Please state ``Written informed consent has been obtained from the patient(s) to publish this paper'' if applicable.}
-
-\dataavailability{We encourage all authors of articles published in MDPI journals to share their research data. In this section, please provide details regarding where data supporting reported results can be found, including links to publicly archived datasets analyzed or generated during the study. Where no new data were created, or where data is unavailable due to privacy or ethical restrictions, a statement is still required. Suggested Data Availability Statements are available in section ``MDPI Research Data Policies'' at \url{https://www.mdpi.com/ethics}.} 
+\dataavailability{
+The datasets in this study are available through the MIMIC-IV database at \url{https://physionet.org/content/mimiciv/3.1/} (accessed on 1 October 2025) with the permission of PhysioNet.}
 
 % Only for journal Drones
 %\durcstatement{Current research is limited to the [please insert a specific academic field, e.g., XXX], which is beneficial [share benefits and/or primary use] and does not pose a threat to public health or national security. Authors acknowledge the dual-use potential of the research involving xxx and confirm that all necessary precautions have been taken to prevent potential misuse. As an ethical responsibility, authors strictly adhere to relevant national and international laws about DURC. Authors advocate for responsible deployment, ethical considerations, regulatory compliance, and transparent reporting to mitigate misuse risks and foster beneficial outcomes.}
@@ -640,9 +628,7 @@ Written informed consent for publication must be obtained from participating pat
 %% Only for journal Nursing Reports
 %\useofartificialintelligence{Please describe in detail any and all uses of artificial intelligence (AI) or AI-assisted tools used in the preparation of the manuscript. This may include, but is not limited to, language translation, language editing and grammar, or generating text. Alternatively, please state that “AI or AI-assisted tools were not used in drafting any aspect of this manuscript”.}
 
-\acknowledgments{In this section you can acknowledge any support given which is not covered by the author contribution or funding sections. This may include administrative and technical support, or donations in kind (e.g., materials used for experiments). Where GenAI has been used for purposes such as generating text, data, or graphics, or for study design, data collection, analysis, or interpretation of data, please add “During the preparation of this manuscript/study, the author(s) used [tool name, version information] for the purposes of [description of use]. The authors have reviewed and edited the output and take full responsibility for the content of this publication.”}
-
-\conflictsofinterest{Declare conflicts of interest or state ``The authors declare no conflicts of interest.'' Authors must identify and declare any personal circumstances or interest that may be perceived as inappropriately influencing the representation or interpretation of reported research results. Any role of the funders in the design of the study; in the collection, analyses or interpretation of data; in the writing of the manuscript; or in the decision to publish the results must be declared in this section. If there is no role, please state ``The funders had no role in the design of the study; in the collection, analyses, or interpretation of data; in the writing of the manuscript; or in the decision to publish the results''.} 
+\conflictsofinterest{The authors declare no conflicts of interest.} 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Optional
@@ -703,10 +689,6 @@ All appendix sections must be cited in the main text. In the appendices, Figures
 % References, variant A: external bibliography
 %=====================================
 \bibliography{references}
-
-%=====================================
-% References, variant B: internal bibliography
-%=====================================
 
 
 % If authors have biography, please use the format below
