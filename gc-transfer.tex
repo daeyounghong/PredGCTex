@@ -210,8 +210,8 @@ As a result, the number of patients that can be effectively included for model t
 % TODO: citation
 
 Transfer learning provides a strategy to mitigate data scarcity by reusing knowledge learned on related tasks.
-In EHR oncology, phenotypes across gastrointestinal and hepatopancreatobiliary cancers can share risk factors, laboratory patterns, and diagnosis trajectories.
-We therefore explore a cross-cancer pretraining paradigm: train a shared backbone on non-gastric cancers and adapt it to GC via fine-tuning.
+In EHR-based oncology research, phenotypes across gastrointestinal and hepatopancreatobiliary cancers often share common risk factors, laboratory patterns, and diagnostic trajectories.
+We therefore explore a cross-cancer transfer learning paradigm: train a shared backbone on non-gastric cancers and adapt it to GC via fine-tuning.
 We evaluate this hypothesis in the MIMIC-IV v3.1 critical care database \citep{Johnson2024MIMICIV}, building models that use only structured data to avoid features that merely encode physician suspicion.
 
 %Our contributions are threefold:
@@ -219,29 +219,6 @@ We evaluate this hypothesis in the MIMIC-IV v3.1 critical care database \citep{J
 %(ii) a rigorous, seed-repeated selection protocol that fixes model choice by validation AUROC and then reports both validation and held-out test metrics with sensitivity/specificity/F1 at a validation-optimized threshold \citep{davis2006relationship,saito2015precision}.
 
 %To test this hypothesis, we developed a reproducible pipeline on the MIMIC-IV v3.1 database to construct cohorts, engineer biologically meaningful features, and train several baseline models along with a transfer-learning multilayer perceptron (Transfer-MLP). The Transfer-MLP is pretrained on non-GC GI cancers (colorectal, liver, esophageal, pancreatic) and then fine-tuned on GC labels using a controlled head-selection strategy and structural parameter (SP) regularization. Our contributions are: (i) a transparent, fully code-driven cohort construction and feature engineering workflow that avoids features merely encoding physicians' suspicion; (ii) a multi-head transfer architecture that supports different fine-tuning strategies; and (iii) an empirical demonstration that pretraining on related cancers improves early GC prediction compared with GC-only training.
-
-
-{\color{red}
-Gastric cancer (GC) continues to pose a major challenge to global health, being the fifth most frequently diagnosed cancer and the fourth most common cause of cancer-related death worldwide \citep{sung2021global}. Harnessing routinely collected electronic health record (EHR) data for earlier GC identification could improve outcomes by enabling timely endoscopy and treatment.
-
-In practice, however, assembling EHR datasets that are truly usable for model development can be difficult. For GC in particular, early-stage cases are relatively uncommon in routine care pathways; clinical records can be incomplete or missing; follow-up and sampling are often irregular; and clinical documentation is complex and heterogeneous. In addition, ethical and regulatory safeguards---for example, the need for institutional approvals and, in some settings, patient consent---can further constrain the availability of analyzable patient-level data. As a result, the number of patients that can be effectively included for model training may remain limited.
-
-Transfer learning offers a principled way to mitigate data scarcity by reusing structure learned from related tasks. In gastrointestinal oncology, non-gastric cancers (e.g., colorectal, liver, esophageal, pancreatic) share overlapping comorbidity profiles and laboratory patterns. We therefore explore a cross-cancer pretraining paradigm: train a shared backbone on non-gastric cancers and adapt it to GC via fine-tuning, using only structured EHR features so as not to rely on signals that merely encode physician suspicion. We evaluate this hypothesis in the MIMIC-IV v3.1 critical care database \citep{Johnson2024MIMICIV}.
-}
-
-\section{Related Work}
-{
-\color{red}
-Population-scale screening and claims cohorts have enabled the development of GC risk models using noninvasive, routinely available variables. Using the Korean National Health Insurance Service screening data (2013--2014) with 10{,}515{,}949 adults and 5-year follow-up, Park et~al.\ trained several algorithms and found that logistic regression achieved the highest discrimination (internal AUROC 0.708; external AUROC 0.669); they further applied SHAP to highlight age, sex, \textit{Helicobacter pylori} infection, smoking, and family history as the top contributors \citep{park2024SHapley}. Class imbalance was addressed via ROSE oversampling, and multiple imputation (MICE) supported robustness analyses \citep{park2024SHapley}.
-
-A complementary line of work develops EHR-only models that avoid endoscopy/pathology so they can be deployed to broader US populations. Kim et~al.\ built a multivariable logistic regression model for noncardia GC (NCGC) using a large multi-state EHR; after multiple imputation, the 0.632 estimator of AUC was 0.731. They reported threshold-dependent operating points (e.g., specificity $\approx90\%$ at PPV $\approx1\%$) and discussed pragmatic EHR limitations such as missingness and the poor capture of key risk factors (e.g., H.\ pylori, alcohol use) \citep{kim2024gastha}.
-
-Methodologically, the relative merits of classical models vs.\ machine learning on EHR have been investigated. In two independent EHR systems (Stanford, University of Washington), Huang et~al.\ compared logistic regression to lasso, SVM, k-nearest neighbors, and random forests for NCGC risk classification. Across internal and external validation, logistic regression performed comparably to optimized ML models, underscoring the value of well-specified, interpretable models when data are heterogeneous and partially missing \citep{huang2022jco}. They also detailed the practical burden of phenotyping from unstructured notes and the sensitivity of results to feature availability \citep{huang2022jco}.
-
-Our study differs from the above in two ways. First, we do not rely on endoscopic or pathology-derived features, focusing instead on structured EHR signals. Second, we leverage a transfer-learning strategy that \emph{pretrains} on non-gastric gastrointestinal cancers and \emph{fine-tunes} on GC, thereby exploiting cross-cancer regularities to improve representation learning under GC data constraints.
-}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 \section{Materials and Methods}
@@ -436,7 +413,7 @@ PC & 1958 & 5874 & 48.6 & 56.0 [34.0–70.0] \\
 \label{fig:model-gcrate}
 \end{figure}
 
-\newcommand{\oldDir}{old/018-tex_and_figs}
+\newcommand{\oldDir}{old/tex_and_figs/018-tex_and_figs}
 
 \begin{figure}[H]
 \centering
