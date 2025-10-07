@@ -214,57 +214,11 @@ Moreover, ethical and regulatory requirements—such as institutional approvals 
 leading to relatively small, heterogeneous datasets for model training.
 % TODO: citation
 
-\paragraph{Why pre-train on CC/EC/LC/PC for GC?}
 We pre-train on non-gastric GI/HPB cancers that exhibit the \emph{same EHR-visible lab signatures} used for GC detection, so learned representations transfer to GC. 
 (\textbf{CC/EC}$\!\to\!$\textbf{GC})
 Luminal gastrointestinal (GI) tumors share occult bleeding $\Rightarrow$ iron-deficiency anemia with characteristic CBC shifts~\cite{read2023cancers,Aksoy2019CBC,Krieg2024IDA,Kim2014GIBleed}. 
 (\textbf{LC}$\!\to\!$\textbf{GC}) Anemia and inflammation/nutritional axes (e.g., albumin, CRP, NLR/PLR) are prominent in liver disease/cancer and are also strong GC biomarkers~\cite{Stein2016Anemia,Gkamprela2017CLDIDA,Crumley2010Albumin,Kim2020Inflam}. 
 (\textbf{PC}$\!\to\!$\textbf{GC}) Dysglycemia/diabetes—frequent in PC—also stratifies GC risk; encoders trained on glucose/HbA1c dynamics improve GC representation learning without implying causation~\cite{Shimoyama2013DMGC,Yoon2013DMGC,Guo2022DMGC}.
-
-
-\paragraph{왜 GC를 위해 CC/EC/LC/PC로 사전학습하는가?}
-우리는 위암(GC) 탐지에 사용되는 것과 \emph{동일한 EHR 상의 검사실 징후(lab signatures)}를 나타내는 비(非)위장관(GI)/간담췌(HPB)계 암(CC/EC/LC/PC)을 대상으로 사전학습을 수행함으로써, 학습된 표현이 GC에 전이될 수 있도록 하였다.  
-(\textbf{CC/EC}$\!\to\!$\textbf{GC}) 장관(luminal GI) 종양들은 잠재적 출혈(occult bleeding)을 공유하며, 이는 철결핍성 빈혈로 이어지고 특징적인 CBC(전혈검사) 변화로 나타난다~\cite{read2023cancers,Aksoy2019CBC,Krieg2024IDA,Kim2014GIBleed}.  
-(\textbf{LC}$\!\to\!$\textbf{GC}) 간 질환 및 간암에서는 빈혈, 염증, 영양 관련 축(예: 알부민, CRP, NLR/PLR)이 두드러지며, 이러한 축들은 GC에서도 강력한 생체표지자(biomarkers)로 작용한다~\cite{Stein2016Anemia,Gkamprela2017CLDIDA,Crumley2010Albumin,Kim2020Inflam}.  
-(\textbf{PC}$\!\to\!$\textbf{GC}) 췌장암(PC)에서 흔히 관찰되는 혈당 이상/당뇨(dysglycemia/diabetes)는 GC 위험을 구분하는 인자이기도 하며, 포도당·HbA1c 변화(dynamic)를 학습한 인코더는 인과관계를 암시하지 않더라도 GC 표현 학습을 향상시킬 수 있다~\cite{Shimoyama2013DMGC,Yoon2013DMGC,Guo2022DMGC}.
-
-
-\paragraph{왜 GC를 위해 CC/EC/LC/PC로 사전학습하는가?}
-우리는 위암(GC)을 탐지하는 데 실제로 사용되는 \emph{동일한 EHR 가시적 시그니처(EHR-visible signatures)}를 나타내는 비(非)위암 데이터(즉, CC/EC/LC/PC)에서 사전학습(pre-train)을 수행한다.  
-이렇게 하면 이러한 암들로부터 학습된 표현(representation)이 GC로 전이(transfer)될 수 있다.
-
-\textbf{(1) CC \& EC $\rightarrow$ GC: 공통된 잠혈(occult bleeding) → IDA/CBC 패턴.}  
-위암은 대개 만성적인 잠혈로 인한 철결핍성 빈혈(IDA)과 특유의 CBC(혈구계산) 변화를 동반한다.  
-이는 대장암(CC)과 식도암(EC)에서도 동일한 기전으로 나타나므로, CC/EC 데이터를 이용해 CBC 기반 인코더를 학습하면 GC에도 일반화된다~\cite{read2023cancers,Aksoy2019CBC,Krieg2024IDA,AGA2024IDA,Kim2014GIBleed}.
-
-\textbf{(2) LC $\rightarrow$ GC: 공통된 빈혈 및 염증/영양 축.}  
-빈혈과 전신 염증(예: 알부민 저하, CRP 상승; NLR/PLR 비율)은 간질환/간암(LC)에서 흔하며, GC에서도 강력한 바이오마커로 작용한다.  
-따라서 LC에서 사전학습을 수행하면 이러한 검사 축(laboratory axes)으로부터의 안정적인 매핑을 학습하게 되어 GC 판별 성능이 향상된다~\cite{Stein2016Anemia,Gkamprela2017CLDIDA,Crumley2010Albumin,Kim2020Inflam}.
-
-\textbf{(3) PC $\rightarrow$ GC: GC 위험을 조절하는 혈당/대사 시그니처.}  
-당뇨병 또는 이상혈당(dysglycemia)은 흔한 공존 질환이며 위암의 \emph{위험 요인}으로 여러 메타분석에서 일관되게 보고되어 있다.  
-따라서 PC 데이터에서 포도당, HbA1c, 인슐린 패턴을 해석하도록 학습된 인코더는, 혈당 상태가 위험도와 교란(confounding)을 강하게 구분하는 GC 코호트에서도 잘 전이된다~\cite{Shimoyama2013DMGC,Yoon2013DMGC,Guo2022DMGC}.  
-중요한 점은, 우리는 췌장암(PC)이 GC를 \emph{유발한다}고 주장하는 것이 아니라, PC 사전학습을 통해 GC에서도 중요한 혈당 관련 시계열 변화를 더 잘 인식할 수 있게 된다는 것이다.
-
-이러한 연관성 덕분에 사전학습은 CBC, 알부민/CRP, 혈당 등과 같은 \emph{GC 발현에 인과적이거나 임상적으로 근접한(lab-time series structure)} 시계열 구조를 학습하게 되며, 이는 이후 GC 파인튜닝(fine-tuning)에 유익하게 작용한다.
-
-
-
-\paragraph{Why pre-train on CC/EC/LC/PC for GC?}
-We pre-train on non-gastric cancers that express \emph{the same EHR-visible signatures actually used to detect GC}, so that representations learned from those cancers transfer to GC.
-
-\textbf{(1) CC \& EC $\rightarrow$ GC: shared occult bleeding $\Rightarrow$ IDA/CBC patterns.}
-GC commonly presents with iron-deficiency anemia (IDA) and characteristic CBC shifts from chronic occult bleeding, the same mechanism seen in colorectal and esophageal cancers; thus CBC-based encoders trained on CC/EC generalize to GC~\cite{read2023cancers,Aksoy2019CBC,Krieg2024IDA,AGA2024IDA,Kim2014GIBleed}.
-
-\textbf{(2) LC $\rightarrow$ GC: shared anemia \& inflammation/nutrition axes.}
-Anemia and systemic inflammation (e.g., low albumin, elevated CRP; NLR/PLR) are prevalent in liver disease/cancer and are also strong GC biomarkers; pre-training on LC teaches robust mappings from these lab axes that improve GC discrimination~\cite{Stein2016Anemia,Gkamprela2017CLDIDA,Crumley2010Albumin,Kim2020Inflam}.
-
-\textbf{(3) PC $\rightarrow$ GC: glycemic/metabolic signatures that modulate GC risk.}
-Diabetes/dysglycemia is a frequent co-morbidity and a \emph{risk factor} for GC (modest but consistent in meta-analyses); encoders trained to parse glucose/HbA1c/insulin patterns in PC transfer to GC cohorts where glycemic status strongly stratifies risk and confounding~\cite{Shimoyama2013DMGC,Yoon2013DMGC,Guo2022DMGC}.
-Crucially, we do \emph{not} claim PC causes GC; rather, PC pre-training improves recognition of glycemic lab dynamics that \emph{also matter for GC}.
-
-These links ensure that pre-training extracts lab-time–series structure (CBC, albumin/CRP, glycemia) that is \emph{causally or clinically proximal} to GC presentation and hence beneficial for GC fine-tuning.
-
 
 Transfer learning provides a strategy to mitigate data scarcity by reusing knowledge learned on related tasks.
 In EHR-based oncology research, phenotypes across gastrointestinal and hepatopancreatobiliary cancers often share common risk factors, laboratory patterns, and diagnostic trajectories.
