@@ -390,7 +390,7 @@ We further split the training set so that 20\% of it was used as a validation se
 In all splits, stratified sampling was performed to ensure that the proportion of cases and controls remained consistent across the training, validation, and test sets. 
 For a given hyperparameter setting, we trained model parameters using the training set, and computed the model performances for the validation and test sets. 
 The evaluation metrics included the area under the receiver operating characteristic curve (AUROC), average precision (AP), sensitivity, specificity, and F1-score. 
-This entire procedure was repeated 10 times with different data splits, which influence aspects such as parameter initialization and mini-batch sampling, potentially leading to variability in the training process. 
+This entire procedure was repeated 10 times with different data splits. 
 To optimize hyperparameters, we computed the mean AUROC on the validation set across these repetitions and selected hyperparameters based on this mean AUROC. 
 The final model performance was then evaluated on the independent test split, and we report the mean performance across the 10 repetitions as the final test result. 
 
@@ -436,7 +436,7 @@ PC & 1958 & 5874 & 48.6 & 56.0 [34.0–70.0] \\
 \label{fig:model-gcrate}
 \end{figure}
 
-\newcommand{\oldDir}{old/tex_and_figs-004}
+\newcommand{\oldDir}{old/018-tex_and_figs}
 
 \begin{figure}[H]
 \centering
@@ -450,31 +450,33 @@ PC & 1958 & 5874 & 48.6 & 56.0 [34.0–70.0] \\
 \end{figure}
 
 
-\subsection{Primary Test Performance}
-We compare LR, XGB, and single-task MLP trained on GC only with the proposed Transfer-MLP (pretrained on CC/EC/LC/PC, fine-tuned on GC).
-Performance is reported as AUROC and AP on the held-out test set;
-Sensitivity, Specificity, and F1 are computed at the validation-selected threshold $t^\star$ that maximizes F1. % (Code refs: Train_MLP/LR/XGB, get_best_f1_threshold)
-% :contentReference[oaicite:32]{index=32} :contentReference[oaicite:33]{index=33} :contentReference[oaicite:34]{index=34}
-We show mean $\pm$ SD over five seeds and 95\% CIs from patient-level bootstrap.
-Table~\ref{tab:main} presents the results.
+%\subsection{Primary Test Performance}
+%We compare LR, XGB, and single-task MLP trained on GC only with the proposed Transfer-MLP (pretrained on CC/EC/LC/PC, fine-tuned on GC).
+%Performance is reported as AUROC and AP on the held-out test set;
+%Sensitivity, Specificity, and F1 are computed at the validation-selected threshold $t^\star$ that maximizes F1. % (Code refs: Train_MLP/LR/XGB, get_best_f1_threshold)
+%% :contentReference[oaicite:32]{index=32} :contentReference[oaicite:33]{index=33} :contentReference[oaicite:34]{index=34}
+%We show mean $\pm$ SD over five seeds and 95\% CIs from patient-level bootstrap.
+%Table~\ref{tab:main} presents the results.
 
-\input{tex_and_figs/table_model_compare_gc1.tex}
-%\begin{table}[t]
-%\centering
-%\small
-%\begin{tabular}{lrrrrr}
-%\toprule
-%Model & AUROC & AP & Sensitivity & Specificity & F1 \\
-%\midrule
-%LR & 0.899 & 0.737 & 0.809 & 0.805 & 0.677 \\
-%XGB & 0.894 & 0.731 & 0.845 & 0.824 & 0.713 \\
-%MLP & 0.906 & 0.766 & 0.847 & 0.788 & 0.683 \\
-%Transfer & 0.920 & 0.780 & 0.893 & 0.790 & 0.709 \\
-%\bottomrule
-%\end{tabular}
-%\caption{Performance of models.}
-%\label{tab:model-compare-gc1}
-%\end{table}
+%\input{tex_and_figs/table_model_compare_gc1.tex}
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lrrrrr}
+\toprule
+Model & AUROC (CI 95 \%) & AP & Sensitivity & Specificity & F1 \\
+\midrule
+LR & 0.921 (0.916--0.926) & 0.780 & 0.843 & 0.844 & 0.731 \\
+XGB & 0.928 (0.923--0.933) & 0.806 & 0.865 & 0.822 & 0.723 \\
+MLP & 0.930 (0.925--0.934) & 0.811 & 0.881 & 0.827 & 0.735 \\
+Transfer & 0.939 (0.934--0.944) & 0.830 & 0.887 & 0.840 & 0.751 \\
+\bottomrule
+\end{tabular}
+
+\caption{Performance of models with 95\textbackslash\{\}\% CIs.}
+\label{tab:model-compare-gc1}
+\end{table}
+
 
 
 
@@ -510,6 +512,28 @@ gc\textbackslash \_rate & Model & AUROC & AP & Sensitivity & Specificity & F1 \\
 \caption{Performance across $\textbackslash\{\}mathrm\{gc\textbackslash\{\}\_rate\}\textbackslash\{\}in\textbackslash\{\}\{1.0,0.5,0.2,0.1,0.05\textbackslash\{\}\}$ for each model. Transfer uses Main constraints at each rate.}
 \label{tab:model-gc-rate-sweep}
 \end{table}
+
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lrrrrr}
+\toprule
+Pretrain types & AUROC & AP & Sensitivity & Specificity & F1 \\
+\midrule
+CC+EC+LC+PC & 0.939 & 0.830 & 0.887 & 0.840 & 0.751 \\
+PC & 0.937 & 0.821 & 0.886 & 0.843 & 0.754 \\
+LC & 0.936 & 0.819 & 0.874 & 0.850 & 0.753 \\
+CC & 0.935 & 0.821 & 0.867 & 0.855 & 0.754 \\
+EC & 0.934 & 0.821 & 0.851 & 0.856 & 0.746 \\
+\bottomrule
+\end{tabular}
+
+\caption{Test performance of \textbackslash\{\}texttt\{Transfer\} grouped by pre-train cancer types (best-by-validation within each group; $\textbackslash\{\}mathrm\{gc\textbackslash\{\}\_rate\}=1.0$).}
+\label{tab:transfer-by-pretrain-types}
+\end{table}
+
+\input{tex_and_figs/table_transfer_by_pretrain_types.tex}
 
 
 \begin{table}[H]
@@ -642,10 +666,15 @@ The following abbreviations are used in this manuscript:
 
 \noindent 
 \begin{tabular}{@{}ll}
-MDPI & Multidisciplinary Digital Publishing Institute\\
-DOAJ & Directory of open access journals\\
-TLA & Three letter acronym\\
-LD & Linear dichroism
+GC & Gastric cancer\\
+CC & Colorectal cancer\\
+EC & Esophageal cancer\\
+LC & Liver cancer\\
+PC & Pancreatic cancer
+%MDPI & Multidisciplinary Digital Publishing Institute\\
+%DOAJ & Directory of open access journals\\
+%TLA & Three letter acronym\\
+%LD & Linear dichroism
 \end{tabular}
 }
 
