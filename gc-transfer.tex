@@ -214,16 +214,13 @@ Moreover, ethical and regulatory requirements—such as institutional approvals 
 leading to relatively small, heterogeneous datasets for model training.
 % TODO: citation
 
-We pre-train on non-gastric GI/HPB cancers that exhibit the \emph{same EHR-visible lab signatures} used for GC detection, so learned representations transfer to GC. 
-(\textbf{CC/EC}$\!\to\!$\textbf{GC})
-Luminal gastrointestinal (GI) tumors share occult bleeding $\Rightarrow$ iron-deficiency anemia with characteristic CBC shifts~\cite{read2023cancers,Aksoy2019CBC,Krieg2024IDA,Kim2014GIBleed}. 
-(\textbf{LC}$\!\to\!$\textbf{GC}) Anemia and inflammation/nutritional axes (e.g., albumin, CRP, NLR/PLR) are prominent in liver disease/cancer and are also strong GC biomarkers~\cite{Stein2016Anemia,Gkamprela2017CLDIDA,Crumley2010Albumin,Kim2020Inflam}. 
-(\textbf{PC}$\!\to\!$\textbf{GC}) Dysglycemia/diabetes—frequent in PC—also stratifies GC risk; encoders trained on glucose/HbA1c dynamics improve GC representation learning without implying causation~\cite{Shimoyama2013DMGC,Yoon2013DMGC,Guo2022DMGC}.
+Across gastrointestinal (GI) and hepatopancreatobiliary (HPB) malignancies, multiple EHR-visible laboratory and clinical signatures overlap with those leveraged for GC detection. 
+Luminal GI tract tumors often cause gradual occult bleeding that culminates in iron-deficiency anemia (IDA), producing characteristic shifts in longitudinal complete blood count (CBC) measures~\citep{read2023cancers,Aksoy2019CBC,Krieg2024IDA,Kim2014GIBleed}. 
+In liver disease and primary liver cancer, anemia and systemic inflammation/nutritional markers (e.g., albumin, C-reactive protein, neutrophil–lymphocyte and platelet–lymphocyte ratios) are prominent and are also established biomarkers of GC prognosis~\citep{Stein2016Anemia,Gkamprela2017CLDIDA,Crumley2010Albumin,Kim2020Inflam}. 
+Pancreatic cancer frequently perturbs glucose metabolism; dysglycemia and diabetes are associated with GC risk, suggesting that encoders exposed to glucose/HbA1c dynamics may learn representations transferable to GC without implying causation~\citep{Shimoyama2013DMGC,Yoon2013DMGC,Guo2022DMGC}. 
+These cross-cancer regularities motivate leveraging non-GC cohorts to improve sample efficiency for GC modeling.
 
-Transfer learning provides a strategy to mitigate data scarcity by reusing knowledge learned on related tasks.
-In EHR-based oncology research, phenotypes across gastrointestinal and hepatopancreatobiliary cancers often share common risk factors, laboratory patterns, and diagnostic trajectories.
-We therefore explore a cross-cancer transfer learning paradigm: train a shared backbone on non-gastric cancers and adapt it to GC via fine-tuning.
-We evaluate this hypothesis in the MIMIC-IV v3.1 critical care database \citep{Johnson2024MIMICIV}, building models that use only structured data to avoid features that merely encode physician suspicion.
+Accordingly, we adopt a cross-cancer transfer-learning paradigm based on EHR data: we pre-train a shared backbone on non-gastric GI/HPB cancers using routinely collected EHR variables (demographics, diagnoses/ICD codes, and laboratory values) and then adapt it to GC via fine-tuning. We evaluate this hypothesis retrospectively in the MIMIC-IV v3.1 EHR database \citep{Johnson2024MIMICIV}, restricting inputs to structured EHR data available without using diagnostic endoscopy or pathology (i.e., no clinical notes), to minimize surveillance bias and label leakage.
 
 %Our contributions are threefold:
 %(i) a multi-head transfer MLP with structural-parameter (L2-SP) regularization \citep{li2018l2sp} and controllable fine-tuning heads (including logit averaging) to stabilize adaptation; and
@@ -239,22 +236,19 @@ We used the publicly available de-identified MIMIC-IV clinical database (v3.1) \
 Access to the database was granted to our research team, and we adhered to all usage agreements, including the prohibition of data disclosure and misuse.
 
 \subsection{Cohort Construction and Features}
-{\color{red}
-In addition to the GC cohort, we deliberately constructed pre-training cohorts for four non-GC cancers—\textbf{CC} (colorectal), \textbf{EC} (esophageal), \textbf{LC} (liver), and \textbf{PC} (pancreatic)—because they express EHR-detectable signatures shared with GC (occult blood loss/IDA in luminal GI; anemia with chronic liver disease and HCC; dysglycemia and metabolic-syndrome signals in pancreatic cancer)~\citep{read2023cancers,Hamilton2008CRC,StatPearls2024Esoph,Stein2016AnemiaLiver,Gkamprela2017IDAinCLD,NCI2021NODPC,Zhong2023MetS_PC,MetS_CRC_2021}.
-
 In this study, we constructed cohorts not only for gastric cancer (GC) but also for multiple non-GC cancers (colorectal, esophageal, liver, and pancreatic).
 This design emphasizes that our approach leverages diverse cancer types for pre-training before fine-tuning on GC.
-Throughout, we use the codes to denote cancer types: \textbf{GC} = gastric cancer (target task), \textbf{CC} = colorectal cancer, \textbf{EC} = esophageal cancer, \textbf{LC} = liver cancer, and \textbf{PC} = pancreatic cancer.}
+Throughout, we use the notations to denote cancer types: \textbf{GC} = gastric cancer (target task), \textbf{CC} = colorectal cancer, \textbf{EC} = esophageal cancer, \textbf{LC} = liver cancer, and \textbf{PC} = pancreatic cancer.
 
 For each cancer, we identified cases by the earliest qualifying ICD-9/10 diagnosis and sampled controls at a fixed $1{:}3$ case:control ratio, excluding subjects with the target cancer.
 The GC index time $t_G$ is the first GC diagnosis; for non-GC cancers $c\in\{\mathrm{CC},\mathrm{EC},\mathrm{LC},\mathrm{PC}\}$ we analogously define $t_c$.
-Features include demographics (age, sex), binary ICD-derived comorbidity indicators (e.g., diabetes, GERD, ulcers), and the most recent values of routine laboratory tests (CBC/chemistry) in a $\pm 30$-day window around the index time (or all available values for controls).
+Features include demographics (age, sex), binary ICD-derived comorbidity indicators (e.g., diabetes, GERD, ulcers), and the most recent values of routine laboratory tests (CMP/CBC) in a $\pm 30$-day window around the index time (or all available values for controls).
 Identical preprocessing is applied to cases and controls; numerical features are standardized by removing the mean and scaling to unit variance using statistics on the training split only.
 
 To address missing values, we applied median imputation based on the control population. 
 For each feature, the median value observed among the controls was calculated and substituted for missing entries across both cases and controls. 
 This strategy minimizes information leakage from the case group and provides a robust central tendency measure for imputation.
-[[TODO: finally used feature list ]]
+%TODO: finally used feature list
 
 
 
@@ -427,7 +421,7 @@ PC & 1958 & 5874 & 48.6 & 56.0 [34.0–70.0] \\
 \label{fig:model-gcrate}
 \end{figure}
 
-\newcommand{\oldDir}{old/tex_and_figs/018-tex_and_figs}
+\newcommand{\oldDir}{old/tex_and_figs/019-tex_and_figs}
 
 \begin{figure}[H]
 \centering
