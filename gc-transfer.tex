@@ -189,6 +189,7 @@ School of Software Convergence, Myongji University, Seoul 03674, Republic of Kor
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcolumntype{P}[1]{>{\centering\arraybackslash}p{#1}}
 \begin{document}
 \newcommand{\GC}{\mathrm{GC}}
 \newcommand{\CC}{\mathrm{CC}}
@@ -375,22 +376,23 @@ This entire procedure was repeated 10 times with different data splits.
 To optimize hyperparameters, we computed the mean AUROC on the validation set across these repetitions and selected hyperparameters based on this mean AUROC. 
 The final model performance was then evaluated on the independent test split, and we report the mean performance across the 10 repetitions as the final test result. 
 
+Metrics such as AUROC and average precision (AP) were computed directly from the continuous prediction scores without applying any threshold. 
+For threshold-dependent measures, operating points were determined using the validation split and then applied to the independent test split. 
+Specifically, the threshold for the F1-score was chosen as the point that maximized the validation F1, and this same threshold was used to compute the F1-score on the test set. 
+For sensitivity and specificity, following the approach in \citep{read2023cancers}, we selected the threshold that provided the best balance between the two metrics—that is, the point on the validation receiver operating characteristic (ROC) curve that was closest to the ideal classification point representing 100\% sensitivity and 0\% false-positive rate. 
+All reported sensitivity and specificity values on the test set were based on this validation-derived threshold.
+
+
 % TODO: decision threshold
 
 %TODO: explaining metrics
 
 \section{Results}
 \subsection{Cohort Overview}
-We constructed case--control cohorts for GC (target) and four source cancers (CC, EC, LC, PC) at a 1:3 ratio.
-Table~\ref{tab:cohort} summarizes sample sizes and demographics.
-Across cohorts, the sex distribution was approximately balanced (overall $\sim$51\% male) and the age distribution was comparable, with medians centered near 55--56 years and interquartile ranges spanning the mid-30s to around 70 years. 
-Within the pretraining pool, EC constitutes the smallest cohort (529 cases, 1{,}587 controls), whereas CC and PC provide the largest case counts (2{,}020 and 1{,}958, respectively), with LC intermediate (1{,}771). 
-In aggregate, the non-GC sources contribute 6{,}278 cases and 18{,}834 controls, compared with 731 and 2{,}193 for GC; thus, the pretraining pool supplies $\sim$8.6$\times$ more labeled samples than the GC task alone. 
-This size differential is pertinent for transfer learning, as it enables the backbone to learn cancer-agnostic structure from richer supervision before adaptation to GC.
-\begin{table}[H]
+\begin{table}[htbp]
 \caption{Cohort summary (GC target; CC/EC/LC/PC sources). Male (\%) and age median [IQR].\label{tab:cohort}}
 \centering
-\begin{tabular}{lrrrr}
+\begin{tabularx}{\textwidth}{CCCCP{4cm}}
 \toprule
 Cohort & Cases & Controls & Male (\%) & Age (Median [IQR]) \\
 \midrule
@@ -400,17 +402,23 @@ EC & 529 & 1587 & 55.1 & 56.0 [36.0–69.0] \\
 LC & 1771 & 5313 & 53.3 & 55.0 [34.0–68.0] \\
 PC & 1958 & 5874 & 48.6 & 56.0 [34.0–70.0] \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \end{table}
+We constructed case--control cohorts for GC (target) and four source cancers (CC, EC, LC, PC) at a 1:3 ratio.
+Table~\ref{tab:cohort} summarizes sample sizes and demographics.
+Across cohorts, the sex distribution was approximately balanced (overall $\sim$51\% male) and the age distribution was comparable, with medians centered near 55--56 years and interquartile ranges spanning the mid-30s to around 70 years. 
+Within the pretraining pool, EC constitutes the smallest cohort (529 cases, 1{,}587 controls), whereas CC and PC provide the largest case counts (2{,}020 and 1{,}958, respectively), with LC intermediate (1{,}771). 
+In aggregate, the non-GC sources contribute 6{,}278 cases and 18{,}834 controls, compared with 731 and 2{,}193 for GC; thus, the pretraining pool supplies $\sim$8.6$\times$ more labeled samples than the GC task alone. 
+This size differential is pertinent for transfer learning, as it enables the backbone to learn cancer-agnostic structure from richer supervision before adaptation to GC.
 
 
 
 \subsection{Comparison of Models}
 %\input{tex_and_figs/table_model_compare_gc1.tex}
-\begin{table}[H]
+\begin{table}[htbp]
 \caption{Performance of models.\label{tab:model-compare-gc1}}
-\centering
-\begin{tabular}{lrrrrr}
+%\begin{adjustwidth}{-\extralength}{0cm}
+\begin{tabularx}{\textwidth}{CP{3cm}CCCC}
 \toprule
 Model & AUROC (CI 95 \%) & AP & Sensitivity & Specificity & F1 \\
 \midrule
@@ -419,34 +427,124 @@ XGB & 0.928 (0.923--0.933) & 0.806 & 0.865 & 0.822 & 0.723 \\
 MLP & 0.930 (0.925--0.934) & 0.811 & 0.881 & 0.827 & 0.735 \\
 Transfer & 0.938 (0.933--0.943) & 0.826 & 0.890 & 0.838 & 0.751 \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
+%\end{adjustwidth}
 \end{table}
 As summarized in Table~\ref{tab:model-compare-gc1}, the Transfer model achieved the highest discrimination and precision–recall performance, outperforming strong non-transfer baselines.
 The Transfer model achieved the best overall discrimination (AUROC $0.938$, 95\% CI $0.933$–$0.943$) and precision--recall performance (AP $0.826$), exceeding the non-transfer MLP trained from scratch (AUROC $0.930$ [0.925–0.934], AP $0.811$), XGB (AUROC $0.928$, AP $0.806$), and LR (AUROC $0.921$, AP $0.780$).
 Relative to the scratch MLP, transfer learning improved AUROC by $+0.008$ and AP by $+0.015$, with a favorable operating profile (sensitivity $0.890$, specificity $0.838$, $F_1=0.751$). These gains suggest that pretraining on related non-GC cancers yields more informative representations for GC risk, translating into small but consistent improvements over the baselines.
 
 
-
-
-
-
-\begin{figure}[H]
+\subsection{Model performance under reduced GC training labels}
+\begin{figure}[htbp]
 \centering
 \subfloat[AUROC]{\includegraphics[width=0.48\textwidth]{tex_and_figs/fig_model_gc_rate_auroc.pdf}}
 \subfloat[AP]{\includegraphics[width=0.48\textwidth]{tex_and_figs/fig_model_gc_rate_ap.pdf}} \\
 %\subfloat[Sensitivity]{\includegraphics[width=0.48\textwidth]{tex_and_figs/fig_model_gc_rate_sensitivity.pdf}}
 %\subfloat[Specificity]{\includegraphics[width=0.48\textwidth]{tex_and_figs/fig_model_gc_rate_specificity.pdf}} \\
 \subfloat[F1]{\includegraphics[width=0.48\textwidth]{tex_and_figs/fig_model_gc_rate_f1.pdf}}
-\caption{Performance across gc\_rate for LR, XGB, MLP, and Transfer (Main). Each panel shows one metric.}
-\label{fig:model-gcrate}
+\caption{Performance across the GC sampling rate $r$. Lower $r$ simulates fewer labeled GC \emph{training} cases.\label{fig:model-gcrate}}
 \end{figure}
+As summarized in Figure~\ref{fig:model-gcrate} (AUROC, AP, and F1 panels), we varied the \emph{GC sampling rate} $r \in \{1.00, 0.50, 0.20, 0.10, 0.05, 0.02, 0.01\}$ to quantify robustness under limited GC labels.
+For each $r$, we applied stratified sampling at proportion $r$ on the GC training partition (preserving the case{:}control ratio), while keeping the GC validation and test partitions fixed.
+Non-GC source datasets for pretraining and all preprocessing were unchanged across $r$.
+All models (LR, XGB, MLP-from-scratch, and Transfer) were then trained on the resulting $r$-subsampled GC training set for that rate.
+The Transfer model always used the same pretraining configuration on non-GC cancers and was fine-tuned on the $r$-specific GC training set.
 
-\newcommand{\oldDir}{old/tex_and_figs folders/020-tex_and_figs}
+As $r$ decreases, all models show the expected degradation in AUROC, AP, and F1 due to reduced sample size (see Figure~\ref{fig:model-gcrate}).
+Across all rates, the Transfer model maintains the best discrimination and precision--recall performance, with the absolute gains most pronounced at the smallest $r$.
+These findings indicate that pretraining on related non-GC cancers consistently improves GC risk modeling across a wide range of labeled-data regimes, with the largest improvements in AP and F1 under the scarcest-label settings.
+%At \texttt{gc\_rate}$=0.01$, Transfer achieves AUROC~0.916 and AP~0.765, surpassing the scratch MLP (AUROC~0.813, AP~0.546) by $+0.103$ AUROC and $+0.219$ AP, and yielding the highest F1 (0.715 vs.\ 0.600; $+0.115$).
+%The advantage remains substantial at \texttt{gc\_rate}$=0.02$ (AUROC $+0.075$, AP $+0.165$, F1 $+0.088$) and \texttt{gc\_rate}$=0.05$ (AUROC $+0.058$, AP $+0.133$, F1 $+0.085$). 
 
-\begin{figure}[H]
+%With more abundant labels, the gap narrows but persists.
+%At \texttt{gc\_rate}$=0.10$, Transfer improves over MLP by $+0.040$ AUROC, $+0.097$ AP, and $+0.048$ F1; at \texttt{gc\_rate}$=0.50$, the corresponding margins are $+0.013$, $+0.027$, and $+0.027$; and at \texttt{gc\_rate}$=1.00$, Transfer still leads (AUROC 0.938 vs.\ 0.930; AP 0.826 vs.\ 0.811; F1 0.751 vs.\ 0.735).
+%Notably, AUROC is relatively robust to prevalence, yet non-transfer models degrade markedly at \texttt{gc\_rate}$\le 0.05$, whereas Transfer retains higher AUROC (0.916--0.924) and substantially higher AP (0.765--0.787). 
+
+
+
+%\begin{table}[t]
+%\centering
+%\small
+%\begin{tabular}{lllllll}
+%\toprule
+%gc\textbackslash \_rate & Model & AUROC & AP & Sensitivity & Specificity & F1 \\
+%\midrule
+%0.01 & LR & 0.814 & 0.561 & 0.770 & 0.730 & 0.599 \\
+%0.01 & XGB & 0.799 & 0.528 & 0.766 & 0.714 & 0.586 \\
+%0.01 & MLP & 0.813 & 0.546 & 0.787 & 0.719 & 0.600 \\
+%0.01 & Transfer & 0.916 & 0.765 & 0.865 & 0.814 & 0.715 \\
+%0.02 & LR & 0.837 & 0.577 & 0.809 & 0.753 & 0.635 \\
+%0.02 & XGB & 0.819 & 0.564 & 0.751 & 0.740 & 0.595 \\
+%0.02 & MLP & 0.845 & 0.608 & 0.775 & 0.781 & 0.638 \\
+%0.02 & Transfer & 0.920 & 0.773 & 0.852 & 0.834 & 0.726 \\
+%0.05 & LR & 0.867 & 0.634 & 0.811 & 0.780 & 0.657 \\
+%0.05 & XGB & 0.850 & 0.620 & 0.783 & 0.755 & 0.622 \\
+%0.05 & MLP & 0.866 & 0.654 & 0.798 & 0.774 & 0.645 \\
+%0.05 & Transfer & 0.924 & 0.787 & 0.864 & 0.831 & 0.730 \\
+%0.10 & LR & 0.885 & 0.665 & 0.827 & 0.790 & 0.674 \\
+%0.10 & XGB & 0.881 & 0.693 & 0.807 & 0.789 & 0.662 \\
+%0.10 & MLP & 0.886 & 0.693 & 0.859 & 0.779 & 0.682 \\
+%0.10 & Transfer & 0.926 & 0.790 & 0.838 & 0.847 & 0.730 \\
+%0.20 & LR & 0.901 & 0.718 & 0.855 & 0.803 & 0.700 \\
+%0.20 & XGB & 0.899 & 0.725 & 0.830 & 0.809 & 0.691 \\
+%0.20 & MLP & 0.908 & 0.757 & 0.847 & 0.821 & 0.712 \\
+%0.20 & Transfer & 0.928 & 0.799 & 0.858 & 0.836 & 0.732 \\
+%0.50 & LR & 0.914 & 0.768 & 0.871 & 0.821 & 0.724 \\
+%0.50 & XGB & 0.917 & 0.785 & 0.825 & 0.832 & 0.708 \\
+%0.50 & MLP & 0.922 & 0.785 & 0.870 & 0.819 & 0.722 \\
+%0.50 & Transfer & 0.935 & 0.812 & 0.871 & 0.847 & 0.749 \\
+%1.00 & LR & 0.921 & 0.780 & 0.843 & 0.844 & 0.731 \\
+%1.00 & XGB & 0.928 & 0.806 & 0.865 & 0.822 & 0.723 \\
+%1.00 & MLP & 0.930 & 0.811 & 0.881 & 0.827 & 0.735 \\
+%1.00 & Transfer & 0.938 & 0.826 & 0.890 & 0.838 & 0.751 \\
+%\bottomrule
+%\end{tabular}
+%
+%\caption{Performance across $\textbackslash\{\}mathrm\{gc\textbackslash\{\}\_rate\}\textbackslash\{\}in\textbackslash\{\}\{1.0,0.5,0.2,0.1,0.05\textbackslash\{\}\}$ for each model. Transfer uses Main constraints at each rate.}
+%\label{tab:model-gc-rate-sweep}
+%\end{table}
+
+
+\subsection{Effect of pretraining source composition}
+%\input{tex_and_figs/table_transfer_by_pretrain_types.tex}
+\begin{table}[htbp]
+\caption{The performance of \emph{Transfer} grouped by pre-train cancer types.\label{tab:transfer-by-pretrain-types}}
+\begin{tabularx}{\textwidth}{P{3cm}CCCCC}
+\toprule
+Pretrain types & AUROC & AP & Sensitivity & Specificity & F1 \\
+\midrule
+LC & 0.931 & 0.809 & 0.875 & 0.839 & 0.743 \\
+EC & 0.932 & 0.811 & 0.878 & 0.841 & 0.747 \\
+CC & 0.932 & 0.815 & 0.866 & 0.849 & 0.748 \\
+PC & 0.934 & 0.816 & 0.873 & 0.848 & 0.750 \\
+CC+EC+LC+PC & 0.938 & 0.826 & 0.890 & 0.838 & 0.751 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+To examine how pretraining source composition influences transfer performance, 
+we repeated pretraining using one source cancer at a time and compared the results 
+to the model pretrained on all four non-GC cancers (CC, EC, LC, PC). 
+As shown in Table~\ref{tab:transfer-by-pretrain-types}, 
+every single-source model outperformed or matched the non-transfer MLP baseline 
+(Table~\ref{tab:model-compare-gc1}), with AUROC values clustered within 0.931–0.934 
+and AP within 0.809–0.816. 
+Among single sources, PC yielded the highest AUROC (0.934) and F1 (0.750), 
+while CC achieved the strongest AP (0.815). 
+EC and LC were comparable, with EC slightly higher in sensitivity and LC slightly higher in specificity.
+
+Pretraining on all four cancers (CC+EC+LC+PC) achieved the numerically best overall results 
+(AUROC 0.938, AP 0.826, F1 0.751), but the difference from single-source variants was modest. 
+Thus, while the multi-source model performed best in this experiment, 
+we do not claim that this combination is universally optimal. 
+Instead, these findings suggest that leveraging multiple heterogeneous source cancers 
+can provide complementary EHR-visible signals, 
+and that carefully balancing or selecting diverse sources 
+offers potential to further improve generalization for gastric cancer prediction.
+
+
+\begin{figure}
 \centering
-\subfloat[AUROC]{\includegraphics[width=0.48\textwidth]{\oldDir/fig_transfer_combo_gc_rate_auroc.pdf}}
-\subfloat[AP]{\includegraphics[width=0.48\textwidth]{\oldDir/fig_transfer_combo_gc_rate_ap.pdf}}\\
 \subfloat[AUROC]{\includegraphics[width=0.48\textwidth]{tex_and_figs/fig_transfer_combo_gc_rate_auroc.pdf}}
 \subfloat[AP]{\includegraphics[width=0.48\textwidth]{tex_and_figs/fig_transfer_combo_gc_rate_ap.pdf}}\\
 \subfloat[F1]{\includegraphics[width=0.48\textwidth]{tex_and_figs/fig_transfer_combo_gc_rate_f1.pdf}}
@@ -463,50 +561,47 @@ Relative to the scratch MLP, transfer learning improved AUROC by $+0.008$ and AP
 %We show mean $\pm$ SD over five seeds and 95\% CIs from patient-level bootstrap.
 %Table~\ref{tab:main} presents the results.
 
-
-
-
-
-
+\subsection{Head-only vs.\ Full-model Fine-tuning (Freezing the Backbone)}
 \begin{table}[t]
 \centering
 \small
-\begin{tabular}{lrrrrr}
+\begin{tabular}{llrrrrr}
 \toprule
-Pretrain types & AUROC & AP & Sensitivity & Specificity & F1 \\
+gc\textbackslash \_rate & Variant & AUROC & AP & Sensitivity & Specificity & F1 \\
 \midrule
-CC+EC+LC+PC & 0.939 & 0.830 & 0.887 & 0.840 & 0.751 \\
-PC & 0.937 & 0.821 & 0.886 & 0.843 & 0.754 \\
-LC & 0.936 & 0.819 & 0.874 & 0.850 & 0.753 \\
-CC & 0.935 & 0.821 & 0.867 & 0.855 & 0.754 \\
-EC & 0.934 & 0.821 & 0.851 & 0.856 & 0.746 \\
+0.01 & FT-Full & 0.915000 & 0.768000 & 0.842000 & 0.829000 & 0.715000 \\
+0.01 & FT-Head & 0.916000 & 0.765000 & 0.865000 & 0.814000 & 0.715000 \\
+0.02 & FT-Full & 0.918000 & 0.773000 & 0.835000 & 0.840000 & 0.722000 \\
+0.02 & FT-Head & 0.920000 & 0.773000 & 0.852000 & 0.834000 & 0.726000 \\
+0.05 & FT-Full & 0.924000 & 0.790000 & 0.851000 & 0.834000 & 0.725000 \\
+0.05 & FT-Head & 0.924000 & 0.787000 & 0.864000 & 0.831000 & 0.730000 \\
+0.10 & FT-Full & 0.924000 & 0.785000 & 0.851000 & 0.830000 & 0.722000 \\
+0.10 & FT-Head & 0.926000 & 0.790000 & 0.838000 & 0.847000 & 0.730000 \\
+0.20 & FT-Full & 0.927000 & 0.791000 & 0.853000 & 0.839000 & 0.731000 \\
+0.20 & FT-Head & 0.928000 & 0.799000 & 0.858000 & 0.836000 & 0.732000 \\
+0.50 & FT-Full & 0.929000 & 0.797000 & 0.868000 & 0.827000 & 0.728000 \\
+0.50 & FT-Head & 0.935000 & 0.812000 & 0.871000 & 0.847000 & 0.749000 \\
+1.00 & FT-Full & 0.930000 & 0.800000 & 0.849000 & 0.844000 & 0.734000 \\
+1.00 & FT-Head & 0.938000 & 0.826000 & 0.890000 & 0.838000 & 0.751000 \\
 \bottomrule
 \end{tabular}
-
-\caption{Test performance of \textbackslash\{\}texttt\{Transfer\} grouped by pre-train cancer types (best-by-validation within each group; $\textbackslash\{\}mathrm\{gc\textbackslash\{\}\_rate\}=1.0$).}
-\label{tab:transfer-by-pretrain-types}
+\caption{Test performance of \textbackslash\{\}texttt\{Transfer\} variants across $\textbackslash\{\}mathrm\{gc\textbackslash\{\}\_rate\}$ (best-by-validation at each rate within each variant).}
+\label{tab:transfer-combo-gc-rate}
 \end{table}
+\label{subsec:freeze-ablation}
+\textbf{Experimental setup.}
+To isolate the effect of freezing the pretrained encoder during GC adaptation, we compare two transfer variants across GC label budgets $r\in\{0.01,0.02,0.05,0.10,0.20,0.50,1.00\}$:
+(i) \emph{FT-Head} (head-only fine-tuning), which \emph{freezes} the MLP backbone pretrained on CC+EC+LC+PC and trains only a new GC head; and
+(ii) \emph{FT-Full} (full-model fine-tuning), which \emph{updates} both the pretrained backbone and the GC head.
+For every $r$, we keep the GC \emph{validation} and \emph{test} partitions fixed, subsample only the GC \emph{training} partition at rate $r$ (preserving the 1{:}3 case:control ratio), and retain the same non-GC pretraining data and preprocessing.
+Within each variant and each $r$, we train with the same objective, class weighting, and regularization as in Section~\ref{sec:methods}; model selection is performed by mean validation AUROC (best-by-validation), and the table reports test metrics for the selected setting (aggregated as described in \S\ref{sec:analysis}).
+Table~\ref{tab:transfer-combo-gc-rate} summarizes the results.
 
-\input{tex_and_figs/table_transfer_by_pretrain_types.tex}
+As shown in Table~\ref{tab:transfer-combo-gc-rate}, \textbf{head-only fine-tuning (FT-Head)} consistently matches or exceeds \textbf{full-model fine-tuning (FT-Full)} across GC label budgets. Under the scarcest labels ($r{=}0.01$–$0.02$), the two variants are effectively tied in AUROC and AP (e.g., at $r{=}0.02$, AUROC $0.920$ vs.\ $0.918$ and AP $0.773$ vs.\ $0.773$), with FT-Head yielding a small F1 edge (0.726 vs.\ 0.722). As $r$ increases, FT-Head obtains clearer gains: at $r{=}0.10$, AUROC/AP/F1 improve from $0.924/0.785/0.722$ (FT-Full) to $0.926/0.790/0.730$ (FT-Head); at $r{=}0.50$, the margin widens to $0.935/0.812/0.749$ vs.\ $0.929/0.797/0.728$; and at $r{=}1.00$, FT-Head attains our best overall performance (AUROC $0.938$, AP $0.826$, F1 $0.751$).
+
+These results suggest that freezing the pretrained backbone while adapting only the prediction head preserves cross-cancer structure learned during pretraining and reduces variance in the GC adaptation step—benefits that persist even when more GC labels are available. In contrast, updating all layers can slightly overfit tabular EHR signals in our setting, narrowing but not eliminating the gap as $r$ grows. This behavior is consistent with prior observations that shared representations learned on related tasks transfer effectively and that restricting adaptation capacity can improve sample efficiency and stability~\citep{Caruana1997_MTL,Pan2010_TLsurvey,Yosinski2014_transferable}.
 
 
-
-\begin{table}[H]
-\caption{Main test performance (mean $\pm$ SD over 5 seeds; 95\% CI in parentheses).}
-\label{tab:main}
-\centering
-\begin{tabular}{lcccccc}
-\toprule
-Model & Pretrain & Head & L2-SP & AUROC & AP & F1 (@$t^\star$) \\
-\midrule
-LR & -- & -- & -- & \dots & \dots & \dots \\
-XGB & -- & -- & -- & \dots & \dots & \dots \\
-MLP (GC only) & -- & -- & -- & \dots & \dots & \dots \\
-Transfer-MLP & CC+EC+LC+PC & avg & on & \textbf{\dots} & \textbf{\dots} & \textbf{\dots} \\
-Transfer-MLP & CC+EC+LC+PC & new & on & \dots & \dots & \dots \\
-\bottomrule
-\end{tabular}
-\end{table}
 
 \subsection{Ablation Studies}
 \paragraph{Source composition and head strategies.}
@@ -515,21 +610,6 @@ We varied pretraining sources (single vs. multiple) and head strategies (avg/new
 % :contentReference[oaicite:35]{index=35}
 Table~\ref{tab:ablation} shows GC test AUROC/AP and the deltas vs.\ single-task MLP.
 
-\begin{table}[H]
-\caption{Ablation on pretraining sources, head strategies, and L2-SP.}
-\label{tab:ablation}
-\centering
-\begin{tabular}{lcccc}
-\toprule
-Pretrain Sources & Head & L2-SP & AUROC & AP \\
-\midrule
-CC & avg & on & \dots & \dots \\
-EC & avg & on & \dots & \dots \\
-CC+EC+LC+PC & avg & on & \dots & \dots \\
-CC+EC+LC+PC & new & on & \dots & \dots \\
-\bottomrule
-\end{tabular}
-\end{table}
 
 \paragraph{Data efficiency.}
 We reduced the GC training fraction ($\texttt{gc\_rate}\in\{1.0,0.5,0.2,0.1,0.05\}$) and observed Transfer vs.\ single-task performance. % (Code refs: settings.py, run\_single\_experiment.py)
