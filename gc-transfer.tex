@@ -237,7 +237,7 @@ Pancreatic cancer frequently perturbs glucose metabolism; dysglycemia and diabet
 These cross-cancer regularities motivate leveraging non-GC cohorts to improve sample efficiency for GC modeling.
 
 Deep learning (DL) provides a principled way to learn non-linear interactions from tabular EHR variables and to distill noisy laboratories into task-relevant representations. 
-When labels for GC are limited, transfer learning (TL) and multi-task learning (MTL) mitigate data scarcity by first inducing \emph{shared, cancer-agnostic representations} on related cancers and then adapting them to GC~\citep{Caruana1997_MTL,Pan2010_TLsurvey,Yosinski2014_transferable}. 
+When labels for GC are limited, transfer learning and multi-task learning mitigate data scarcity by first inducing \emph{shared, cancer-agnostic representations} on related cancers and then adapting them to GC~\citep{Caruana1997_MTL,Pan2010_TLsurvey,Yosinski2014_transferable}. 
 In this paradigm, DL functions primarily as a \emph{representation learner} that captures cross-cancer laboratory signatures expected to recur in GC, thereby improving sample efficiency and stability at adaptation time.
 
 Accordingly, we aimed to investigate a cross-cancer transfer-learning paradigm with deep learning based on EHR data: we pre-train a shared multilayer-perceptron (MLP) backbone on non-gastric GI/HPB cancers using routinely collected EHR variables (demographics, diagnoses/ICD codes, and laboratory values) and then adapt it to GC via fine-tuning. 
@@ -262,20 +262,27 @@ This design emphasizes that our approach leverages diverse cancer types for pre-
 Throughout, we use the notations to denote cancer types: \textbf{GC} = gastric cancer (target task), \textbf{CC} = colorectal cancer, \textbf{EC} = esophageal cancer, \textbf{LC} = liver cancer, and \textbf{PC} = pancreatic cancer.
 
 % and sampled controls at a fixed $1{:}3$ case:control ratio, excluding subjects with the target cancer.
-For each cancer, we identified cases by the earliest qualifying ICD-9/10 diagnosis.
-The GC index time $t_G$ is the first GC diagnosis; for non-GC cancers $c\in\{\mathrm{CC},\mathrm{EC},\mathrm{LC},\mathrm{PC}\}$, we analogously define $t_c$.
-Features include demographics (age, sex), binary ICD-derived comorbidity indicators (e.g., diabetes, GERD, ulcers), and the most recent values of routine laboratory tests (CBC/CMP) in a $\pm 30$-day window around the index time (or all available values for controls).
-Identical preprocessing is applied to cases and controls; numerical features are standardized by removing the mean and scaling to unit variance using statistics on the training split only.
 
-We restricted inputs to routinely collected, \textit{structured} EHR variables that are clinically interpretable. 
+For each cancer, we identified cases by the earliest qualifying ICD-9/10 diagnosis.
+We constructed features as follows.
+For cases, we anchored on the admission during which the cancer was diagnosed.
+Features include demographics (age, sex), binary ICD-derived comorbidity indicators (e.g., diabetes, GERD, ulcers) from the history up to and including the admission start date, and the oldest available values of routine laboratory tests (CBC/CMP) observed within the 730 days prior to (and including) the admission start date (or from all available records for controls).
+
+We restricted inputs to routinely collected, structured EHR variables.
+Feature selection was informed by prior gastric cancer–related studies~\citep{park2024SHapley,huang2022jco,Kim2024EHRGC} 
+and guided by the principle of prioritizing routinely measured, low-burden variables with minimal missingness 
+(e.g., complete blood count [CBC] and comprehensive metabolic panel [CMP] components).
 \textbf{Demographics} comprised age and sex. 
 \textbf{ICD-derived comorbidity indicators} (binary) included: diabetes mellitus; obesity; alcohol use disorder; current or prior tobacco use; gastroesophageal reflux disease (GERD); dyspepsia; peptic ulcer disease; chronic gastritis; documented \textit{Helicobacter pylori} infection; hypertension; history of myocardial infarction or angina; dyslipidemia/pure hypercholesterolemia; family history of cancer; protein–calorie malnutrition; post-hemorrhagic anemia; adverse effects of antineoplastic agents; dysphagia; receipt of antineoplastic chemotherapy; atrial fibrillation; iron-deficiency anemia; chronic kidney failure; coronary atherosclerosis/ischemic heart disease without angina; and hypo-osmolality/hyponatremia. 
 \textbf{Laboratory features} consisted of complete blood count (CBC) indices and basic chemistries: hemoglobin; hematocrit; red blood cell count; white blood cell count; platelet count; mean corpuscular volume (MCV); mean corpuscular hemoglobin (MCH); mean corpuscular hemoglobin concentration (MCHC); red cell distribution width (RDW); leukocyte differential percentages (neutrophils, lymphocytes, monocytes, eosinophils, basophils); sodium; potassium; chloride; bicarbonate; blood urea nitrogen; creatinine; glucose; and anion gap. 
 
-To address missing values, we applied median imputation based on the control population. 
-For each feature, the median value observed among the controls was calculated and substituted for missing entries across both cases and controls. 
-This strategy minimizes information leakage from the case group and provides a robust central tendency measure for imputation.
-%TODO: finally used feature list
+%To address missing values, we applied median imputation based on the control population. 
+%For each feature, the median value observed among the controls was calculated and substituted for missing entries across both cases and controls. 
+%This strategy minimizes information leakage from the case group and provides a robust central tendency measure for imputation.
+
+We then enforced a \emph{lab-complete inclusion criterion}: patients with any missing value in the required laboratory feature set were excluded prior to modeling.
+For each cancer, controls were sampled at a fixed $1{:}3$ case:control ratio from patients without a diagnosis of the cancer (ever), and the same lab-complete criterion was applied to controls.
+Identical preprocessing was applied to cases and controls; numerical features were standardized (z-scored) using statistics computed on the training split only.
 
 
 
@@ -626,7 +633,10 @@ These results imply that (i) each source cancer contributes overlapping but not 
 From a clinical standpoint, these models are not intended to replace diagnostic endoscopy but to prioritize patients for timely evaluation and follow-up. Earlier identification of higher-risk patients in routine care could shorten time-to-endoscopy and facilitate detection at more treatable stages, where survival is markedly better~\citep{NCI2023stomach}. The transfer framework is appealing for institutions with few confirmed GC cases but access to other GI/HPB cancer cohorts; pretraining on related cancers can “borrow strength” and stabilize GC performance without requiring specialized data modalities or free-text notes, potentially reducing surveillance bias and label leakage.
 
 This study has several limitations.
-First, MIMIC-IV is a single-center U.S. dataset derived largely from inpatient encounters; external validity to outpatient or multi-institutional settings remains unproven~\citep{Johnson2024MIMICIV}. Second, cases were indexed by first GC diagnosis code, and laboratory windows spanned $\pm 30$ days around the index. Although we deliberately avoided endoscopy/pathology and free text to minimize surveillance bias and leakage, peri-diagnostic labs may still capture workup-related physiology; future analyses should push the prediction horizon further upstream (e.g., 6–24 months pre-index) and compare different look-back policies. Third, comorbidities were ICD-derived and labs were reduced to the most recent values; residual confounding, coding error, and information loss from temporal aggregation are likely. 
+First, MIMIC-IV is a single-center U.S. dataset derived largely from inpatient encounters; external validity to outpatient or multi-institutional settings remains unproven~\citep{Johnson2024MIMICIV}.
+Second, cases were indexed by the first GC diagnosis code, and laboratory features were defined as the \emph{oldest} available values within the 730 days preceding (and including) the index admission start date for cases (and across the full record for controls).
+While this policy reduces peri-diagnostic bias relative to using recent values, it also collapses longitudinal information into single snapshots and may discard informative dynamics.
+Moreover, restricting to a lab-complete cohort may introduce selection bias toward patients with more complete testing, potentially limiting generalizability to settings with sparser laboratory coverage.
 Finally, we did not evaluate subgroup fairness (e.g., by age, sex, or race/ethnicity) or conduct a full calibration analysis.
 
 Several extensions appear promising.
@@ -717,6 +727,10 @@ The following abbreviations are used in this manuscript:
 AP & Average precision\\
 AUROC & Area under the receiver operating characteristic curve\\
 EHR & Electronic health record\\
+CBC & Complete blood count\\
+CMP & Comprehensive metabolic panel\\
+GI & Gastrointestinal\\
+HPB & Hepatopancreatobiliary\\
 GC & Gastric cancer\\
 CC & Colorectal cancer\\
 EC & Esophageal cancer\\
