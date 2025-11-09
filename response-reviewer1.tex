@@ -26,6 +26,8 @@ We sincerely thank the reviewers for their careful reading of our manuscript and
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %\section*{}
 
+\section*{Title and Abstract}
+
 \section*{Introduction}
 
 \subsection*{Comment 1}
@@ -47,6 +49,30 @@ The novelty relative to multi-task learning approaches could be better delineate
 \subsection*{Response 2}
 We thank the reviewer for pointing out that the relationship of our work to multi-task learning approaches was not sufficiently clear in the original introduction.
 In the revised manuscript, we have now explicitly situated our framework within the classic multi-task and transfer-learning literature by adding new paragraphs in the Introduction (p.~X, paragraph~Y) and Discussion (p.~X, paragraph~Y).
+
+
+\section*{Materials and Methods}
+\subsection*{Comment 1}
+The rationale for lab-complete inclusion criteria (excluding missing values) could introduce bias; discussion of imputation strategies would strengthen the paper.
+
+\subsection*{Response 1}
+We agree with the reviewer that excluding patients with missing laboratory values is a strong assumption and may introduce bias.
+%Our primary motivation for adopting a lab-complete design in the present work was to avoid the additional modeling assumptions and complexity associated with imputing longitudinal EHR laboratory trajectories, and to maintain a consistent feature set across multiple gastrointestinal and hepatopancreatobiliary cancer cohorts.
+In the revised Discussion, we now explicitly acknowledge that complete-case analysis can reduce representativeness and potentially bias risk estimates, and we outline missing-data strategies that could be integrated into future extensions of our framework (p.~X, paragraph~Y, lines~C--D).
+
+
+
+\subsection*{Comment 2}
+No calibration or interpretability analysis (e.g., SHAP, feature importance), which would aid clinical interpretability.
+
+\subsection*{Response 2}
+...
+
+\subsection*{Comment 3}
+No calibration or interpretability analysis (e.g., SHAP, feature importance), which would aid clinical interpretability.
+
+\subsection*{Response 2}
+...
 
 
 \section*{Results}
