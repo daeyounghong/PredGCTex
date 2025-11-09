@@ -1,0 +1,124 @@
+\documentclass[11pt]{article}
+\usepackage{setspace}
+\usepackage{geometry}
+\usepackage{xcolor}
+\usepackage{natbib}
+\usepackage{xr}
+
+\externaldocument{gc-transfer}
+
+\geometry{margin=1in}
+
+\begin{document}
+
+\begin{center}
+{\Large \textbf{Responses to Reviewer 2}} \\[6pt]
+%Manuscript ID: \textbf{diagnostics-3950051} \\
+%Title: \textit{Cross-Cancer Transfer Learning for Gastric Cancer Risk Prediction from Electronic Health Records}
+\end{center}
+
+\vspace{1em}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\section*{Summary}
+We sincerely thank the reviewers for their careful reading of our manuscript and for providing insightful comments that helped us improve the clarity and rigor of the work. Below we provide detailed, point-by-point responses to all comments. All revisions are highlighted in the revised manuscript in \textcolor{red}{red}, and the locations of the changes are indicated in each response.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\section*{}
+
+%(p.~X, paragraph~Y, lines~A--B)
+
+\subsection*{Comment 1}
+\textbf{L46/7} Beyond framing multi-source data as “overlapping information,” authors should integrate clinical/biological context to strengthen the rationale for multi-source transfer.
+
+\subsection*{Response 1}
+We thank the reviewer for this helpful suggestion. In the revised manuscript, we have modified the Introduction to provide explicit clinical and biological rationale for why gastrointestinal and hepatopancreatobiliary cancers share EHR-visible signals that motivate multi-source pretraining (p.~X, paragraph~Y, lines~A--B).
+%In particular, we now describe shared axes such as iron-deficiency anemia and occult bleeding across colorectal and gastric cancers, inflammatory and nutritional markers in liver disease and gastric cancer, and metabolic/metabolic-syndrome–related links between diabetes, colorectal, pancreatic, and gastric cancers, and connect these to our structured EHR feature set.
+%We thank the reviewer for this helpful suggestion. In the revised manuscript, we have modified the Introduction to provide explicit clinical and biological rationale for why gastrointestinal and hepatopancreatobiliary cancers share EHR-visible signals that motivate multi-source pretraining (p.~X, paragraph~Y, lines~A--B).
+%Specifically, we now describe: (i) how chronic occult gastrointestinal bleeding and iron-deficiency anemia (IDA) are shared early manifestations of colorectal and gastric cancers and are recommended triggers for endoscopic evaluation \citep{Hamilton2008CRC,Aksoy2019CBC,Krieg2024IDA,AGA2024IDA}; (ii) how anemia, systemic inflammation, and nutritional markers such as albumin and inflammatory ratios overlap across liver disease, primary liver cancer, and gastric cancer prognosis \citep{Stein2016Anemia,Gkamprela2017CLDIDA,Crumley2010Albumin,Kim2020Inflam}; and (iii) how metabolic syndrome and dysglycemia are associated with colorectal, pancreatic, and gastric cancer risk \citep{MetS_CRC_2021,Zhong2023MetS_PC,Shimoyama2013DMGC,Yoon2013DMGC,Guo2022DMGC}.
+%We then connect these shared pathophysiologic axes to the structured EHR variables used in our model (CBC indices, basic chemistries, and ICD-derived comorbidities), clarifying why multi-cancer pretraining can learn transferable representations for gastric cancer risk.
+
+\subsection*{Comment 2}
+\textbf{L206} While Table 2, Table 3, Figure 1, and Figure 2. report the mean performance metrics (e.g., AUROC, AP), they lack error bars across repetitions,which can fully assess the consistency and statistical significance of the transfer learning gains.
+
+\subsection*{Response 2}
+We thank the reviewer for this important suggestion and have revised the manuscript to explicitly quantify uncertainty, stability across repetitions, and the statistical significance of the transfer learning gains.
+
+\begin{itemize}
+\item \textit{Statistical Analysis (Section~2.4).}
+We have expanded the description of our evaluation protocol to clarify that
+(i) all models are trained and evaluated over 10 independent repetitions with different random splits,
+(ii) we report standard deviations or 95\% confidence intervals across these repetitions, and
+(iii) we compute 95\% confidence intervals for AUROC using patient-level bootstrap resampling of the test set (2000 resamples), and apply DeLong’s test for pairwise AUROC comparisons between the Transfer model and each non-transfer baseline (LR, XGB, scratch MLP).
+These additions are highlighted in red in the revised \textit{Statistical Analysis} section
+(\textit{p.~\textbf{XX}, paragraph~2, lines~\textbf{YYY}--\textbf{ZZZ}}).
+
+\item \textit{Tables 2 and 3.}
+In Table~2 (Table~\ref{tab:model-compare-gc1}), we now present AUROC as the mean test performance across repeated runs with the standard deviation ($\pm$) and the 95\% bootstrap confidence interval in parentheses, and we updated the caption to state:
+\emph{``Reported values include the mean test performance across repeated runs with standard deviation ($\pm$), and the 95\% bootstrap confidence interval (parentheses).''}
+In Table~3 (Table~\ref{tab:transfer-by-pretrain-types}), we likewise report AUROC as mean~$\pm$~standard deviation across repetitions and clarify this in the caption:
+\emph{``Reported values include the mean test performance across repeated runs with standard deviation ($\pm$).''}
+These revisions appear in the \textit{Results} section where Tables~\ref{tab:model-compare-gc1} and \ref{tab:transfer-by-pretrain-types} are introduced
+(\textit{p.~\textbf{XX}, paragraph~1, lines~\textbf{YYY}--\textbf{ZZZ}} for Table~\ref{tab:model-compare-gc1};
+\textit{p.~\textbf{XX}, paragraph~1, lines~\textbf{YYY}--\textbf{ZZZ}} for Table~\ref{tab:transfer-by-pretrain-types}).
+
+\item \textit{Figures 1 and 2.}
+For Figure~1 (Figure~\ref{fig:model-gcrate}) and Figure~2 (Figure~\ref{fig:transfer-combo-gcrate}), we added error bars that represent the 95\% confidence intervals across repetitions for each model and GC label fraction.
+The figure captions were updated to state:
+\emph{``Error bars denote 95\% confidence intervals across repetitions.''}
+These changes are reflected in the figure captions in the \textit{Results} section
+(\textit{p.~\textbf{XX}, caption of Figure~\ref{fig:model-gcrate}, lines~\textbf{YYY}--\textbf{ZZZ}} and
+\textit{p.~\textbf{XX}, caption of Figure~\ref{fig:transfer-combo-gcrate}, lines~\textbf{YYY}--\textbf{ZZZ}}).
+
+\item \textit{Results section: variability, confidence intervals, and DeLong’s test.}
+In Section~3.2, we now explicitly summarize the variability and confidence intervals across repetitions, noting that:
+(i) the standard deviations of test AUROC are small for all models (indicating stable estimates),
+(ii) the 95\% bootstrap confidence interval for the Transfer model is shifted upward relative to that of the scratch MLP (with partial overlap due to the moderate size of the GC test set), and
+(iii) pairwise DeLong’s test on the common GC test set shows that the Transfer model achieves significantly higher AUROC than LR and XGB ($p = 0.0023$ and $p = 0.0433$, respectively), whereas the improvement over the scratch MLP does not reach conventional significance ($p = 0.1231$), consistent with a modest effect size and finite-sample uncertainty.
+These additions are highlighted in red in the \textit{Comparison of Models} subsection
+(\textit{p.~\textbf{XX}, paragraph~2--3, lines~\textbf{YYY}--\textbf{ZZZ}}).
+
+\item \textit{Results section: stability across GC label fractions.}
+In Section~3.3, we further comment on the repetition-level confidence intervals in Figure~\ref{fig:model-gcrate}, emphasizing that the Transfer model maintains relatively narrow and nearly constant intervals across GC sampling rates, whereas LR, XGB, and the scratch MLP show wider dispersion under label scarcity.
+This provides an explicit assessment of model stability across repeated experiments.
+The corresponding sentences are highlighted in red in the \textit{Model performance under reduced GC training labels} subsection
+(\textit{p.~\textbf{XX}, paragraph~2, lines~\textbf{YYY}--\textbf{ZZZ}}).
+
+\item \textit{Discussion section: interpretation of uncertainty and effect size.}
+In Section~4, we now explicitly interpret these uncertainty estimates, stating that
+(i) the gains of the Transfer model are modest in absolute magnitude but stable across repetitions and supported by bootstrap CIs and DeLong’s test, and
+(ii) the relatively wide and partially overlapping CIs mainly reflect finite-sample uncertainty in the moderately sized GC test cohort.
+We also discuss that pretraining acts as an implicit regularizer that yields tighter and more stable confidence intervals for the Transfer model under label scarcity.
+These revisions are highlighted in red in the \textit{Discussion} section
+(\textit{p.~\textbf{XX}, paragraph~3--4, lines~\textbf{YYY}--\textbf{ZZZ}}).
+\end{itemize}
+
+
+%We hope that these revisions better communicate why this cross-cancer transfer
+%framework is relevant and of interest to both clinical and methodological
+%audiences.
+
+\subsection*{Comment 2}
+\textbf{L364} The authors conclude that their framework offers a “generalizable... route to cancer risk modeling”. However, this claim of generalizability is premature and not yet supported by the evidence, as all experiments are confined to a single dataset. To maintain scientific rigor, the conclusion should be tempered. I strongly recommend rephrasing to clarify that the approach has the potential to be generalizable, but that this must be rigorously tested in future multi-center studies. The absence of external validation is the primary barrier to claiming generalizability at this stage.
+
+\subsection*{Response 2}
+We thank the reviewer for this important comment and fully agree that external validation is essential before making strong claims about generalizability. In the revised manuscript, we have softened the wording in the Conclusions to describe our framework as a sample-efficient proof-of-concept within a single-center EHR cohort, with only potential for broader generalization (p.~X, paragraph~Y, lines~A--B). Specifically, the sentence previously stating that the study ``advances a generalizable and sample-efficient route to cancer risk modeling'' has been revised to: ``in this single-center EHR cohort, this study illustrates a sample-efficient route to gastric cancer risk modeling under label scarcity and outlines a framework with potential for broader generalization, which will need to be confirmed in future multi-center external validation studies.'' In addition, we have strengthened the Limitations section to highlight the lack of external validation as a primary limitation and to explicitly call for future multi-center and prospective studies to rigorously assess generalizability (p.~X, paragraph~Y, lines~C--D).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Response to Comments on English Language}
+
+\subsection*{Point 1}
+\textit{[Copy Reviewer comment on English language, if present.]}
+
+\subsection*{Response}
+\textcolor{red}{We have carefully revised the manuscript for clarity, grammar, and stylistic quality.}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Additional Clarifications to the Editor}
+We respectfully note that the revisions requested by the reviewers have been fully incorporated into the manuscript. All modifications are highlighted in \textcolor{red}{red}. We appreciate the editor’s guidance and remain available to provide any additional information.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bibliographystyle{plainnat}
+\bibliography{references} % Replace ‘references.bib’ with your bib file name.
+
+\end{document}
