@@ -876,9 +876,6 @@ performance, although this remains to be confirmed in external settings.
 
 
 This study has several limitations.
-%{\color{red}
-%First, all experiments were conducted within a single U.S. tertiary-care hospital system using the MIMIC-IV database, and we did not perform external validation on independent EHR datasets. As a result, the generalizability of the proposed cross-cancer transfer learning framework to other health systems, care settings, and countries remains uncertain. Future work should include multi-center external validation and prospective evaluation to rigorously assess transportability and clinical impact.
-%}
 {
 \color{red}
 First, all experiments were conducted using MIMIC-IV, a de-identified,
@@ -898,7 +895,6 @@ necessary, recalibration on independent multi-center and outpatient EHR
 cohorts to assess robustness under domain shift and to quantify clinical
 impact.
 }
-%First, MIMIC-IV is a single-center U.S. dataset derived largely from inpatient encounters; external validity to outpatient or multi-institutional settings remains unproven~\citep{Johnson2024MIMICIV}.
 Second, cases were indexed by the first GC diagnosis code, and laboratory features were defined as the oldest available values within the 730 days preceding (and including) the index admission start date for cases (and across the full record for controls).
 While this policy reduces peri-diagnostic bias relative to using recent values, it also collapses longitudinal information into single snapshots and may discard informative dynamics.
 Moreover, restricting to a lab-complete cohort may introduce selection bias toward patients with more complete testing, potentially limiting generalizability to settings with sparser laboratory coverage.
