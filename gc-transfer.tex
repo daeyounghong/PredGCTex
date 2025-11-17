@@ -141,7 +141,8 @@ Timely identification of individuals at elevated risk for gastric cancer (GC) wi
 We posit that cancers within the gastrointestinal/hepatopancreatobiliary spectrum share signals that can be leveraged via transfer learning on electronic health records (EHRs) variables.
 %Early identification of gastric cancer (GC) risk from electronic health records (EHRs) could enable timelier endoscopy.
 \textbf{Methods:}
-We developed a cross-cancer transfer learning framework (Transfer) that pre-trains a multilayer perceptron (MLP) on non-GC gastrointestinal/hepatopancreatobiliary cancers (colorectal, esophageal, liver, pancreatic) and then adapts to GC using only structured variables from the de-identified MIMIC-IV v3.1 database. We compared transfer variants against strong non-transfer baselines (logistic regression, XGBoost, architecturally matched MLP) across decreasing GC label fractions to mimic data-scarce regimes. Primary endpoints were AUROC and average precision (AP); secondary endpoints included F1 and sensitivity/specificity.
+%We developed a cross-cancer transfer learning framework (Transfer) that pre-trains a multilayer perceptron (MLP) on non-GC gastrointestinal/hepatopancreatobiliary cancers (colorectal, esophageal, liver, pancreatic) and then adapts to GC using only structured variables from the de-identified MIMIC-IV v3.1 database.
+We developed a cross-cancer transfer learning framework (TransferGC) on structured EHR data from the MIMIC-IV database, \textcolor{red}{including 508 GC cases in the target cohort}, that pretrains on non-gastric gastrointestinal/hepatopancreatobiliary cancers (colorectal, esophageal, liver, pancreatic) and then adapts to GC using only structured variables. We compared transfer variants against strong non-transfer baselines (logistic regression, XGBoost, architecturally matched multilayer perceptron), with AUROC and average precision (AP) as primary endpoints and F1 and sensitivity/specificity as secondary endpoints.
 \textbf{Results:}
 In the full-label setting, Transfer achieved AUROC $0.854$ and AP $0.600$, outperforming logistic regression (LR), extreme gradient boosting (XGB) and improving over the scratch MLP in AUROC ($+0.024$) and F1 ($+0.027$), while AP was essentially tied (Transfer $0.600$ vs.\ MLP $0.603$).
 As GC labels were reduced, Transfer maintained the strongest overall performance.
@@ -350,7 +351,12 @@ Throughout, we use the notations to denote cancer types: \textbf{GC} = gastric c
 For each cancer, we identified cases by the earliest qualifying ICD-9/10 diagnosis.
 We constructed features as follows.
 For cases, we anchored on the admission during which the cancer was diagnosed.
-Features include demographics (age, sex), binary ICD-derived comorbidity indicators (e.g., diabetes, GERD, ulcers) from the history up to and including the admission start date, and the oldest available values of routine laboratory tests (CBC/CMP) observed within the 730 days prior to (and including) the admission start date (or from all available records for controls).
+%Features include demographics (age, sex), binary ICD-derived comorbidity indicators (e.g., diabetes, GERD, ulcers) from the history up to and including the admission start date, and the oldest available values of routine laboratory tests (CBC/CMP) observed within the 730 days prior to (and including) the admission start date (or from all available records for controls).
+\textcolor{red}{
+For CBC and CMP laboratories, we summarized each test using the oldest available value observed within the 730 days prior to (and including) the admission start date for cases (and across the full available record for controls).
+This design was chosen to approximate a screening-like deployment scenario in which risk scores would be computed at relatively routine encounters rather than only immediately before diagnosis, and to harmonize feature construction across cancers with heterogeneous visit frequencies and order sets using a simple tabular representation.
+We acknowledge that this summary collapses longitudinal trajectories to a single snapshot and therefore does not capture intra-individual trends or variability; we revisit the implications of this choice in the Limitations.
+}
 
 We restricted the inputs to routinely collected, structured EHR variables. 
 Feature selection was informed by prior gastric cancer–related studies~\citep{park2024SHapley,huang2022jco,Kim2024EHRGC} 
@@ -363,8 +369,13 @@ Laboratory features consisted of CBC indices and basic chemistries, including he
 
 We then enforced a lab-complete inclusion criterion: patients with any missing value in the required laboratory feature set were excluded prior to modeling.
 For each cancer, controls were sampled at a fixed $1{:}3$ case:control ratio from patients without a diagnosis of the cancer (ever), and the same lab-complete criterion was applied to controls.
+\textcolor{red}{
+This filter excludes approximately 31\%, 36\%, 19\%, 31\% and 25\% of initially eligible GC, CC, EC, LC and PC cohorts, respectively.
+}
+\textcolor{red}{
+In addition, this case–control design yields cohorts with one case per three controls, which partially mitigates the extreme class imbalance of GC in the full MIMIC-IV population while preserving a majority of controls.
+}
 Identical preprocessing was applied to cases and controls; numerical features were standardized (z-scored) using statistics computed on the training split only.
-
 
 
 %\subsection{Feature Engineering}
@@ -394,17 +405,18 @@ We first define the class-weighted binary cross-entropy (BCE) used throughout.
 Let $\sigma(t)=\frac{1}{1+\exp(-t)}$ denote the logistic sigmoid.
 Given a logit $z\in\mathbb{R}$ and a binary label $y\in\{0,1\}$, the per-sample loss is
 \begin{equation}
+\color{red}
   \label{eq:bce}
   \ell_{\mathrm{BCE}}(z,y;\alpha)
-  = -\,\alpha\,y\log \sigma(z)\;-\;(1-y)\log\!\big(1-\sigma(z)\big),
+  = -\alpha y\log \sigma(z)-(1-y)\log \big(1-\sigma(z)\big),
   \end{equation}
 where $\alpha>0$ is the positive-class weight; in our experiments we set $\alpha=3$ to match the $1{:}3$ case--control sampling design.
 %TODO: cite: class-weighted BCE?
 
-During pretraining, we jointly optimize the backbone $f_\phi$ and all cancer-specific heads $\Theta_h\!=\!\{\theta_c\}_{c\in\mathcal{C}}$ by minimizing the mean of the weighted BCE over cancer types:
+During pretraining, we jointly optimize the backbone $f_\phi$ and all cancer-specific heads $\Theta_h = \{\theta_c\}_{c\in\mathcal{C}}$ by minimizing the mean of the weighted BCE over cancer types:
 \begin{equation}
   \frac{1}{|\mathcal{C}|}\sum_{c\in\mathcal{C}}
-  \ \mathbb{E}_{(x,y)\sim\mathcal{D}_c}\!\big[\,\ell_{\mathrm{BCE}}(h_{\theta_c}(f_\phi(x)),y;\alpha)\,\big],
+  \ \mathbb{E}_{(x,y)\sim\mathcal{D}_c} \big[\ell_{\mathrm{BCE}}(h_{\theta_c}(f_\phi(x)),y;\alpha)\big],
 \end{equation}
 with positive-class weight $\alpha{=}3$. 
 To reduce overfitting, we applied standard $\ell_2$-regularization
@@ -415,7 +427,7 @@ Thus, the pretraining objective is
 %  \min_{\phi,\Theta_h}\ 
   \mathcal{L}_{\mathrm{pre}}(\phi,\Theta_h)
   = \frac{1}{|\mathcal{C}|}\sum_{c\in\mathcal{C}}
-  \mathbb{E}_{(x,y)\sim\mathcal{D}_c}\!\big[\,\ell_{\mathrm{BCE}}(h_{\theta_c}(f_\phi(x)),y;\alpha)\,\big]
+  \mathbb{E}_{(x,y)\sim\mathcal{D}_c}\big[\ell_{\mathrm{BCE}}(h_{\theta_c}(f_\phi(x)),y;\alpha)\big]
   + \preDecayC \big( \|\phi\|_2^2 + \sum_{c\in\mathcal{C}} \|\theta_c\|_2^2 \big).
 \end{equation}
 
@@ -441,8 +453,9 @@ For input features $x$, by using the pretrained backbone encoder $\enc{\encP}$, 
 Let $\pretrainP$ denote the pretrained model parameters of backbone encoder.
 For fine-tuning, we first initialize the model parameters of backbone $\encP$ to $\pretrainP$, and then jointly optimize the backbone $\enc{\encP}$ and the GC head $\head{\GC}$ by minimizing the weighted BCE for the GC dataset:
 \begin{equation}
+\color{red}
 \label{eq:ft_obj}
-\mathcal{L}_{\mathrm{ft}}(\phi,\headP{\GC}) = \mathbb{E}_{(x,y)\sim \mathcal{D}_{\GC}}\!\big[\ell_{\mathrm{BCE}}(\head{\GC}(\enc{\pretrainP}(x)),y;\alpha)\big]\;+\;\ftDecayC \big( \|\phi\|_2^2 + \|\headP{\GC}\|_2^2 \big),
+\mathcal{L}_{\mathrm{ft}}(\phi,\headP{\GC}) = \mathbb{E}_{(x,y)\sim \mathcal{D}_{\GC}}\!\big[\ell_{\mathrm{BCE}}(\head{\GC}(\enc{\pretrainP}(x)),y;\alpha)\big]+\ftDecayC \big( \|\phi\|_2^2 + \|\headP{\GC}\|_2^2 \big),
 \end{equation}
 where we use positive-class weight $\alpha{=}3$ and $\ftDecayC$ is the $\ell_2$-regularization coefficient for fine-tuning.
 Details of other hyperparameters are provided in Appendix~\ref{app:hparam}.
@@ -474,6 +487,11 @@ We further split the training set so that 20\% of it was used as a validation se
 In all splits, stratified sampling was performed to ensure that the proportion of cases and controls remained consistent across the training, validation, and test sets. 
 For a given hyperparameter setting, we trained model parameters using the training set, and computed the model performances for the validation and test sets. 
 The evaluation metrics included the area under the receiver operating characteristic curve (AUROC), average precision (AP), sensitivity, specificity, and F1-score. 
+\textcolor{red}{
+To assess calibration of the GC risk models, we additionally constructed reliability diagrams on the held-out GC test set. 
+For each model, predicted probabilities were grouped into disjoint bins on $[0,1]$, and we plotted the observed fraction of GC cases against the mean predicted probability in each bin. 
+We also summarized miscalibration using the expected calibration error (ECE), defined as the average absolute difference between observed and predicted risk across bins, weighted by bin size.
+}
 This entire procedure was repeated 10 times with different data splits. 
 To optimize hyperparameters, we computed the mean AUROC on the validation set across these repetitions and selected hyperparameters based on this mean AUROC. 
 The final model performance was then evaluated on the independent test split, and we report the mean performance across the 10 repetitions as the final test result. 
@@ -499,6 +517,22 @@ For each patient in the held-out GC test set, SHAP values were calculated for ev
 The larger values indicate a greater overall influence of that feature on the model's predicted GC risk.
 }
 
+{
+\color{red}
+Taken together, class imbalance between cancer cases and controls was handled using a combination of
+(i) a nested case–control design with a fixed $1{:}3$ case:control sampling ratio,
+(ii) stratified sampling to preserve the case proportion across training, validation, and test splits,
+(iii) class-weighted binary cross-entropy with positive-class weight $\alpha{=}3$ during model training,
+and (iv) evaluation based on metrics that are less sensitive to class prevalence, including AUROC and average precision.
+Threshold-dependent metrics such as sensitivity, specificity, and F1-score were computed using thresholds
+selected on the validation set, which reduces instability due to class imbalance when evaluating on the independent test set.
+}
+
+{\color{red}
+To facilitate reproducibility, we will release a minimal but complete implementation of the proposed framework in a public GitHub repository upon acceptance of this manuscript. 
+Because access to MIMIC-IV requires credentialing and a data-use agreement, the repository will be designed to work with any user who has approved access to MIMIC-IV.
+}
+%The repository will include code for cohort construction from MIMIC-IV (based on the inclusion and exclusion criteria described above), feature preprocessing, model training and evaluation for all compared models (logistic regression, XGBoost, MLP, and transfer-learning variants), and scripts to regenerate the main tables and figures. Because access to MIMIC-IV requires credentialing and a data-use agreement, the repository will be designed to work with any user who has approved access to MIMIC-IV and can recreate the same cohort under the same criteria.
 
 %\subsection{Hyperparameter Search}
 %\label{subsec:hparam}
@@ -565,16 +599,16 @@ In aggregate, the non-GC sources contribute 4{,}559 cases and 13{,}677 controls 
 \small
 \begin{tabularx}{\textwidth}{P{1cm}P{4cm}CCCCC}
 \toprule
-Model & AUROC & AP & Sensitivity & Specificity & F1 & Brier \\
+Model & AUROC & AP & Sensitivity & Specificity & F1 \\
 \midrule
 %LR & 0.812 & 0.518 & 0.707 & 0.755 & 0.578 \\
 %XGB & 0.808 & 0.549 & 0.692 & 0.737 & 0.556 \\
 %MLP & 0.830 & 0.603 & 0.782 & 0.738 & 0.609 \\
 %Transfer & 0.854 & 0.600 & 0.768 & 0.786 & 0.636 \\
-LR & $0.812${\color{red}$\pm0.002$ (0.759--0.862)} & 0.518 & 0.707 & 0.755 & 0.578 & 0.151 \\
-XGB & $0.808${\color{red}$\pm0.010$ (0.760--0.851)} & 0.549 & 0.692 & 0.737 & 0.556 & 0.160 \\
-MLP & $0.830${\color{red}$\pm0.006$ (0.780--0.874)} & 0.603 & 0.782 & 0.739 & 0.609 & 0.164 \\
-Transfer & $0.854${\color{red}$\pm0.007$ (0.811--0.893)} & 0.600 & 0.768 & 0.786 & 0.636 & 0.159 \\
+LR & $0.812${\color{red}$\pm0.002$ (0.759--0.862)} & 0.518 & 0.707 & 0.755 & 0.578 \\
+XGB & $0.808${\color{red}$\pm0.010$ (0.760--0.851)} & 0.549 & 0.692 & 0.737 & 0.556 \\
+MLP & $0.830${\color{red}$\pm0.006$ (0.780--0.874)} & 0.603 & 0.782 & 0.739 & 0.609 \\
+Transfer & $0.854${\color{red}$\pm0.007$ (0.811--0.893)} & 0.600 & 0.768 & 0.786 & 0.636 \\
 \bottomrule
 \end{tabularx}
 %\end{adjustwidth}
@@ -616,6 +650,22 @@ this non-significant result for the Transfer versus MLP comparison likely reflec
 and the finite-sample uncertainty rather than the absence of any performance difference.
 }
 
+\textcolor{red}{
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.45\textwidth]{tex_and_figs/fig_reliability_gc1.pdf}
+    \caption{{\color{red}Reliability diagram showing observed GC incidence versus mean predicted probability. 
+    The diagonal line denotes perfect calibration.}}
+    \label{fig:reliability-gc1}
+\end{figure}
+}
+
+\textcolor{red}{
+With respect to calibration, the reliability diagram in Figure~\ref{fig:reliability-gc1} shows that all four models are reasonably well aligned with the identity line overall. 
+The non-linear models (XGB, MLP, and Transfer) tend to occupy slightly over-confident regions, particularly at higher predicted probabilities, whereas the logistic regression (LR) model remains more conservative. 
+Consistently, the expected calibration error (ECE) was smallest for LR (0.072), followed by XGB (0.089) and the scratch MLP (0.119), with the Transfer model exhibiting the largest ECE (0.161). 
+Thus, although the Transfer model achieves the best discrimination, its predicted risks are somewhat more over-confident than those of LR and may benefit from post hoc recalibration before deployment.
+}
 
 
 \subsection{Model performance under reduced GC training labels}
@@ -684,7 +734,7 @@ In contrast, the Transfer model maintains relatively narrow and nearly constant 
 \small
 \begin{tabularx}{\textwidth}{P{2.5cm}P{2.5cm}CCCCC}
 \toprule
-Pretrain types & AUROC & AP & Sensitivity & Specificity & F1 & Brier \\
+Pretrain types & AUROC & AP & Sensitivity & Specificity & F1 \\
 \midrule
 %LC & 0.931 & 0.809 & 0.875 & 0.839 & 0.743 \\
 %EC & 0.932 & 0.811 & 0.878 & 0.841 & 0.747 \\
@@ -697,11 +747,11 @@ Pretrain types & AUROC & AP & Sensitivity & Specificity & F1 & Brier \\
 %EC & 0.828 & 0.578 & 0.705 & 0.779 & 0.594 \\
 %CC+EC+LC+PC & 0.854 & 0.600 & 0.768 & 0.786 & 0.636 \\
 %\midrule
-CC & $0.841${\color{red}$\pm0.006$} & 0.568 & 0.792 & 0.763 & 0.632 & 0.171 \\
-PC & $0.838${\color{red}$\pm0.005$} & 0.572 & 0.758 & 0.743 & 0.599 & 0.169 \\
-LC & $0.835${\color{red}$\pm0.007$} & 0.544 & 0.767 & 0.745 & 0.605 & 0.173 \\
-EC & $0.828${\color{red}$\pm0.005$} & 0.578 & 0.705 & 0.779 & 0.594 & 0.168 \\
-CC+EC+LC+PC & $0.854${\color{red}$\pm0.007$} & 0.600 & 0.768 & 0.786 & 0.636 & 0.159 \\
+CC & $0.841${\color{red}$\pm0.006$} & 0.568 & 0.792 & 0.763 & 0.632  \\
+PC & $0.838${\color{red}$\pm0.005$} & 0.572 & 0.758 & 0.743 & 0.599 \\
+LC & $0.835${\color{red}$\pm0.007$} & 0.544 & 0.767 & 0.745 & 0.605 \\
+EC & $0.828${\color{red}$\pm0.005$} & 0.578 & 0.705 & 0.779 & 0.594 \\
+CC+EC+LC+PC & $0.854${\color{red}$\pm0.007$} & 0.600 & 0.768 & 0.786 & 0.636 \\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -818,7 +868,11 @@ which is compatible with a small effect size and limited statistical power given
 }
 
 
-
+\textcolor{red}{
+From a calibration standpoint, our reliability and ECE analyses indicate that all four models achieve broadly acceptable calibration for GC risk estimation, 
+with the Transfer model showing slightly more over-confident predictions than the logistic regression baseline, 
+supporting the use of post hoc recalibration and prospective evaluation before clinical deployment.
+}
 
 We hypothesize three complementary mechanisms behind the observed gains:
 (i) \textit{representation sharing}—pretraining encourages the backbone to encode recurring EHR patterns that GC also exhibits;
@@ -877,8 +931,17 @@ pretraining on related cancers could borrow strength and stabilize GC
 performance, although this remains to be confirmed in external settings.
 }
 
+\textcolor{red}{
+From a deployment perspective, the proposed framework is relatively lightweight. All predictors are derived from routinely collected structured EHR data (demographics, comorbid diagnoses, medications, and basic laboratory tests) that are already available in most hospital information systems. Feature construction relies on simple summary statistics over a pre-specified look-back window and does not require free-text processing or medical imaging pipelines. The final GC risk score is produced by a shallow feed-forward neural network trained on tabular inputs, which can be evaluated efficiently on standard CPU hardware and is amenable to batch scoring of large inpatient cohorts in routine EHR jobs.
+Although we did not perform a formal benchmarking study of computational cost, the small model size and reliance on common laboratory panels suggest that runtime is unlikely to be the main barrier to real-world use.
+Instead, the more critical challenges for deployment are data governance, integration into local EHR workflows, prospective calibration monitoring, and external validation in diverse care settings.
+In addition, consistent with recent guidance on clinical risk prediction tools,
+safe deployment will require careful assessment of model calibration and subgroup fairness
+(e.g., across age, sex, and race/ethnicity), beyond the aggregate results reported here.
+}
 
 This study has several limitations.
+
 {
 \color{red}
 First, all experiments were conducted using MIMIC-IV, a de-identified,
@@ -898,17 +961,35 @@ necessary, recalibration on independent multi-center and outpatient EHR
 cohorts to assess robustness under domain shift and to quantify clinical
 impact.
 }
-Second, cases were indexed by the first GC diagnosis code, and laboratory features were defined as the oldest available values within the 730 days preceding (and including) the index admission start date for cases (and across the full record for controls).
-While this policy reduces peri-diagnostic bias relative to using recent values, it also collapses longitudinal information into single snapshots and may discard informative dynamics.
+%Second, cases were indexed by the first GC diagnosis code, and laboratory features were defined as the oldest available values within the 730 days preceding (and including) the index admission start date for cases (and across the full record for controls).
+%While this policy reduces peri-diagnostic bias relative to using recent values, it also collapses longitudinal information into single snapshots and may discard informative dynamics.
+
+\textcolor{red}{
+Second, cases were indexed by the first GC diagnosis code, and for each CBC/CMP laboratory we summarized the oldest available measurement within the 730-day pre-index window for cases (and across the full available record for controls).
+This policy was intended to reduce peri-diagnostic bias, whereby laboratory values obtained during diagnostic work-up or acute decompensation near the time of diagnosis might dominate the signal, and to emulate a more screening-like setting in which risk scores are computed at routine encounters earlier in the disease course.
+However, by collapsing irregular longitudinal trajectories into single-time-point snapshots, this representation cannot exploit trends, volatility, or recovery patterns that often carry additional predictive information and may attenuate the discriminative capacity of the model compared with fully longitudinal approaches.
+Moreover, because at least one measurement of each laboratory is required, this strategy likely enriches the cohort for patients with more complete laboratory histories and higher health-care utilization, which may bias performance estimates and limit generalizability to populations with sparser testing.
+}
 %Moreover, restricting to a lab-complete cohort may introduce selection bias toward patients with more complete testing, potentially limiting generalizability to settings with sparser laboratory coverage.
+
 \textcolor{red}{
 Third, we restricted all analyses to a “lab-complete” cohort, requiring non-missing values for all predefined laboratory predictors within the look-back window. This design choice simplifies model development and avoids introducing additional uncertainty from ad hoc imputation; however, it also induces selection bias. In routine care, comprehensive laboratory panels are more likely to be ordered for patients with greater healthcare utilization and higher comorbidity burden, whereas individuals with fewer encounters or milder symptoms are less likely to have all tests measured. As a result, the case mix, event rate, and distribution of predictors in our training data may differ from those in a broader outpatient or low-utilization population. This discrepancy could affect model calibration and external generalization: for example, risk scores learned on a lab-complete inpatient cohort may over- or under-estimate absolute risk in settings where testing intensity and missingness patterns differ. The direction and magnitude of this effect cannot be determined from our current single-center data and will need to be quantified in future prospective or multi-center external validation studies. Future work should relax the lab-complete requirement by incorporating principled strategies for handling missing data (e.g., multiple imputation or model-based imputation), so that patients with partial laboratory profiles can also contribute to model development.
 }
+
 \textcolor{red}{
 In addition, because the held-out GC test set is of moderate size with a limited number of positive cases, the bootstrap confidence intervals are relatively wide and partially overlapping across models, which reflects finite-sample uncertainty.
 Larger external cohorts will be required to narrow these intervals and to more precisely quantify the performance differences between models.
 }
-Finally, we did not evaluate subgroup fairness (e.g., by age, sex, or race/ethnicity) or conduct a full calibration analysis.
+
+%{Finally, we did not evaluate subgroup fairness (e.g., by age, sex, or race/ethnicity) or conduct a full calibration analysis.}
+{\color{red}
+Finally, we did not evaluate subgroup fairness (e.g., performance stratified by age, sex, or race/ethnicity), 
+and our calibration assessment was restricted to aggregate reliability diagrams and ECE on the GC test set. 
+For a clinical risk prediction tool, however, well-calibrated risk estimates and equitable performance across key patient subgroups 
+are essential for safe deployment; accordingly, detailed subgroup- and setting-specific calibration and fairness analyses, 
+ideally using external multi-center cohorts, will be required before any clinical use.
+}
+
 
 Several extensions appear promising.
 (i) Move beyond static features to longitudinal encoders that incorporate trends, rates of change, and testing frequency.
