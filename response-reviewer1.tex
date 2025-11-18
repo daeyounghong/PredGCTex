@@ -4,6 +4,7 @@
 \usepackage{xcolor}
 \usepackage{natbib}
 \usepackage{xr}
+\usepackage{cleveref}
 
 \externaldocument{gc-transfer}
 
@@ -34,7 +35,7 @@ The abstract could briefly mention limitations or future validation needs (e.g.,
 \subsection*{Response 1}
 We thank the reviewer for this helpful suggestion. 
 In the revised Abstract, we have explicitly stated that all models were developed and evaluated using a single-center inpatient dataset, and that external validation on multi-center and outpatient cohorts will be required before any clinical deployment. 
-This change makes the limitation and the need for future validation clear already at the abstract level (Abstract, Conclusions).
+This change makes the limitation and the need for future validation clear already at the abstract level (p.~1, lines~17--23).
 
 
 
@@ -44,7 +45,7 @@ The last sentence might be more impactful if it emphasized clinical integration 
 
 \subsection*{Response 2}
 We agree and have revised the final sentence of the Abstract to emphasize the potential clinical integration of our framework. 
-Specifically, the Conclusions now highlight that, if confirmed in future multi-center studies, the proposed cross-cancer transfer learning approach could be integrated into EHR-based triage and clinical decision support workflows to flag patients at elevated gastric cancer risk for timely endoscopy and specialist referral (Abstract, Conclusions).
+Specifically, the Conclusions now highlight that, if confirmed in future multi-center studies, the proposed cross-cancer transfer learning approach could be integrated into EHR-based triage and clinical decision support workflows to flag patients at elevated gastric cancer risk for timely endoscopy and specialist referral (p.~1, lines~17--23).
 
 
 
@@ -58,11 +59,11 @@ Could benefit from a short paragraph explaining why structured EHRs (as opposed 
 %}
 
 \subsection*{Response 1}
-Thank you for this thoughtful comment. We agree that additional clarification strengthens the Introduction. We have therefore added a new explanatory paragraph in the Introduction (p.~2, paragraph~6, lines~74--80).
-\begin{quote}
-We focus our initial modeling on routinely collected structured EHR variables (demographics, ICD-derived comorbidities, and routine laboratory tests) since these variables are ubiquitously available across care settings, standardized, and low-burden to obtain, which makes models straightforward to deploy in real-world workflows \citep{read2023cancers,huang2022jco}.
-We therefore treat structured EHRs as a deployment-friendly starting point; integrating imaging and notes is an important direction for future work once the structured-only baseline is firmly established.
-\end{quote}
+Thank you for this thoughtful comment. We agree that additional clarification strengthens the Introduction. We have therefore added a new explanatory paragraph in the Introduction (pp.~2--3, lines~82--88).
+%\begin{quote}
+%We focus our initial modeling on routinely collected structured EHR variables (demographics, ICD-derived comorbidities, and routine laboratory tests) since these variables are ubiquitously available across care settings, standardized, and low-burden to obtain, which makes models straightforward to deploy in real-world workflows \citep{read2023cancers,huang2022jco}.
+%We therefore treat structured EHRs as a deployment-friendly starting point; integrating imaging and notes is an important direction for future work once the structured-only baseline is firmly established.
+%\end{quote}
 
 \subsection*{Comment 2}
 The novelty relative to multi-task learning approaches could be better delineated.
@@ -70,7 +71,8 @@ The novelty relative to multi-task learning approaches could be better delineate
 %(p.~10, paragraph~2, lines~335--342)
 \subsection*{Response 2}
 We thank the reviewer for pointing out that the relationship of our work to multi-task learning approaches was not sufficiently clear in the original introduction.
-In the revised manuscript, we have now explicitly situated our framework within the classic multi-task and transfer-learning literature by adding new paragraphs in the Introduction (p.~X, paragraph~Y) and Discussion (p.~X, paragraph~Y).
+In the revised manuscript, we have now explicitly situated our framework within the classic multi-task and transfer-learning literature by adding new paragraphs in the Introduction (p.~3, lines~104--116).
+% and Discussion (p.~13, lines~456--449).
 
 
 \section*{Materials and Methods}
@@ -80,7 +82,7 @@ The rationale for lab-complete inclusion criteria (excluding missing values) cou
 \subsection*{Response 1}
 We agree with the reviewer that excluding patients with missing laboratory values is a strong assumption and may introduce bias.
 %Our primary motivation for adopting a lab-complete design in the present work was to avoid the additional modeling assumptions and complexity associated with imputing longitudinal EHR laboratory trajectories, and to maintain a consistent feature set across multiple gastrointestinal and hepatopancreatobiliary cancer cohorts.
-In the revised Discussion, we now explicitly acknowledge that complete-case analysis can reduce representativeness and potentially bias risk estimates, and we outline missing-data strategies that could be integrated into future extensions of our framework (p.~X, paragraph~Y, lines~C--D).
+In the revised Discussion, we now explicitly acknowledge that complete-case analysis can reduce representativeness and potentially bias risk estimates, and we outline missing-data strategies that could be integrated into future extensions of our framework (pp.~15--16, lines~579--595).
 
 
 
@@ -88,13 +90,26 @@ In the revised Discussion, we now explicitly acknowledge that complete-case anal
 No calibration or interpretability analysis (e.g., SHAP, feature importance), which would aid clinical interpretability.
 
 \subsection*{Response 2}
-...
+We thank the reviewer for this important suggestion.
+In the revised manuscript, we have added both calibration analyses and SHAP-based interpretability to improve clinical transparency.
+First, we now evaluate model calibration using reliability diagrams and the expected calibration error (ECE) on the held-out GC test set with adding \cref{fig:reliability-gc1}
+(pp.6--7, lines~256--262; p.~9, lines~344--352; p.~13, lines~472--476).
+Second, to enhance interpretability of the Transfer model, we have added a SHapley Additive Explanations (SHAP) analysis with adding \cref{fig:shap-global}
+(p.7, lines~284--290; p.~12, lines~417--426; p.~14, lines~499--513).
+
 
 \subsection*{Comment 3}
 Limited mention of how class imbalance was handled beyond weighting.
 
-\subsection*{Response 2}
-...
+\subsection*{Response 3}
+We appreciate the reviewer’s comment regarding class imbalance.
+In the revised manuscript, we now describe our strategy for handling class imbalance at the data,
+training, and evaluation stages: specifically, we clarify the use of a nested case–control design
+with a fixed $1{:}3$ case:control ratio, stratified train/validation/test splits, a class-weighted
+binary cross-entropy loss with positive-class weight $\alpha{=}3$, and evaluation metrics
+(AUROC and average precision) that are less sensitive to class prevalence.
+These additions are highlighted in the Methods section
+(p.~4, lines~166--168; p.~7, lines~291--299).
 
 
 \section*{Results}
@@ -105,32 +120,32 @@ Statistical significance testing (e.g., DeLong test for AUROC) is missing.
 We thank the reviewer for this important suggestion and agree that both statistical robustness and model stability should be explicitly quantified.
 Accordingly, we have made the following changes:
 
-(1) We now additionally report the standard deviations across repetitions for each model, patient-level bootstrap confidence intervals, and p-values of DeLong's tests. The revised Table~\ref{tab:model-compare-gc1} presents AUROC as mean~$\pm$~SD together with 95\% patient-level bootstrap confidence intervals. We also updated the \textit{Statistical Analysis} section (page~X, paragraph~Y) and \textit{Results} section (page~X, paragraph~Y) to describe and interpret these summaries:
-\begin{quote}
-To quantify both model stability and uncertainty, we also report standard deviations or 95\% confidence intervals across repetitions. 
-In addition, we computed 95\% confidence intervals (CIs) for AUROC using patient-level bootstrap resampling of the test set with 2000 resamples.
-\end{quote}
-\begin{quote}
-Across the ten repetitions, the standard deviations of test AUROC were small for all models ($\leq 0.01$), suggesting stable performance estimates rather than isolated favorable runs.
-For AUROC, the 95\% bootstrap confidence interval for the Transfer model (0.816--0.896) was shifted upward relative to that of the scratch MLP (0.781--0.883), consistent with a modest but reproducible gain.
-Because the held-out GC test set contains a limited number of positive cases, these bootstrap CIs are relatively wide and partially overlapping across models.
-In this sense, the width of the CIs primarily quantifies how much the performance would fluctuate if a similarly sized test cohort were resampled, while the consistent shift in the mean AUROC toward the Transfer model suggests a small but robust advantage.
-\end{quote}
+(1) We now additionally report the standard deviations across repetitions for each model, patient-level bootstrap confidence intervals, and p-values of DeLong's tests. The revised Table~\ref{tab:model-compare-gc1} presents AUROC as mean~$\pm$~SD together with 95\% patient-level bootstrap confidence intervals. We also updated the \textit{Statistical Analysis} section (p.~7, lines~266--273) and \textit{Results} section (pp.~8--9, lines~327--342) to describe and interpret these summaries.
+%\begin{quote}
+%To quantify both model stability and uncertainty, we also report standard deviations or 95\% confidence intervals across repetitions. 
+%In addition, we computed 95\% confidence intervals (CIs) for AUROC using patient-level bootstrap resampling of the test set with 2000 resamples.
+%\end{quote}
+%\begin{quote}
+%Across the ten repetitions, the standard deviations of test AUROC were small for all models ($\leq 0.01$), suggesting stable performance estimates rather than isolated favorable runs.
+%For AUROC, the 95\% bootstrap confidence interval for the Transfer model (0.816--0.896) was shifted upward relative to that of the scratch MLP (0.781--0.883), consistent with a modest but reproducible gain.
+%Because the held-out GC test set contains a limited number of positive cases, these bootstrap CIs are relatively wide and partially overlapping across models.
+%In this sense, the width of the CIs primarily quantifies how much the performance would fluctuate if a similarly sized test cohort were resampled, while the consistent shift in the mean AUROC toward the Transfer model suggests a small but robust advantage.
+%\end{quote}
 
-(2) We revised the \textit{Discussion} to make the interpretation of the AUROC gains (p.~X, paragraph~Y). In particular, we now emphasize that the improvements are modest in absolute terms and that the main value of the proposed framework lies in its stability and behavior under label scarcity.
-\begin{quote}
-We note that the absolute improvements in AUROC are modest when comparing Transfer with a scratch MLP (Table~\ref{tab:model-compare-gc1}).
-As detailed in the Results section, these gains are consistently observed across repetitions and bootstrap-based uncertainty estimates, despite the moderate size of the held-out GC test set, but we do not claim a dramatic effect size.
-Rather, the main value of the proposed framework lies in its stability and behavior under label scarcity.
-As GC training labels are reduced, the relative advantage of Transfer becomes more pronounced in AUROC, AP, and F1 (Figure~\ref{fig:model-gcrate}), suggesting that pretraining on related cancers yields a more stable operating profile when data are limited.
-From a clinical standpoint, such modest but consistent gains in discrimination and F1 at fixed endoscopy capacity can still translate into more accurate prioritization of patients for evaluation, especially in systems where GC labels are sparse but other GI/HPB cancers are commonly seen.
-\end{quote}
+(2) We revised the \textit{Discussion} to make the interpretation of the AUROC gains (p.~13, lines~457--471). In particular, we now emphasize that the improvements are modest in absolute terms and that the main value of the proposed framework lies in its stability and behavior under label scarcity.
+%\begin{quote}
+%We note that the absolute improvements in AUROC are modest when comparing Transfer with a scratch MLP (Table~\ref{tab:model-compare-gc1}).
+%As detailed in the Results section, these gains are consistently observed across repetitions and bootstrap-based uncertainty estimates, despite the moderate size of the held-out GC test set, but we do not claim a dramatic effect size.
+%Rather, the main value of the proposed framework lies in its stability and behavior under label scarcity.
+%As GC training labels are reduced, the relative advantage of Transfer becomes more pronounced in AUROC, AP, and F1 (Figure~\ref{fig:model-gcrate}), suggesting that pretraining on related cancers yields a more stable operating profile when data are limited.
+%From a clinical standpoint, such modest but consistent gains in discrimination and F1 at fixed endoscopy capacity can still translate into more accurate prioritization of patients for evaluation, especially in systems where GC labels are sparse but other GI/HPB cancers are commonly seen.
+%\end{quote}
 
-(3) We also made the limitations related to test set size and confidence interval width in the \textit{Discussion} (p.~X, paragraph~Y).
-\begin{quote}
-In addition, because the held-out GC test set is of moderate size with a limited number of positive cases, the bootstrap confidence intervals are relatively wide and partially overlapping across models, which reflects finite-sample uncertainty.
-Larger external cohorts will be required to narrow these intervals and to more precisely quantify the performance differences between models.
-\end{quote}
+(3) We also made the limitations related to test set size and confidence interval width in the \textit{Discussion} (p.~16, lines~495--600).
+%\begin{quote}
+%In addition, because the held-out GC test set is of moderate size with a limited number of positive cases, the bootstrap confidence intervals are relatively wide and partially overlapping across models, which reflects finite-sample uncertainty.
+%Larger external cohorts will be required to narrow these intervals and to more precisely quantify the performance differences between models.
+%\end{quote}
 
 
 \subsection*{Comment 2}
@@ -139,40 +154,48 @@ Some figures (e.g., AUROC trends) could include confidence intervals.
 \subsection*{Response 2}
 Thank you for this helpful suggestion. We agree that displaying confidence intervals improves the interpretability of the trend figures.
 We have therefore revised Figure~\ref{fig:model-gcrate} and Figure~\ref{fig:transfer-combo-gcrate} by ploting vertical error bars representing 95\% confidence intervals across repeated experiments (different random data splits and training runs).
-To help readers interpret these intervals, we also added a short description in the Results section (subsection “Model performance under reduced GC training labels”) explaining the observed variability patterns (....lines...).
-In the Discussion section, we connect this observation to the bias–variance perspective on transfer learning, noting that pretraining appears to act as an implicit regularizer that dampens sensitivity to sampling noise in small GC cohorts (...lines...).
+To help readers interpret these intervals, we also added a short description in the Results section (subsection “Model performance under reduced GC training labels”) explaining the observed variability patterns (p.~10, lines~369--374).
+In the Discussion section, we connect this observation to the bias–variance perspective on transfer learning, noting that pretraining appears to act as an implicit regularizer that dampens sensitivity to sampling noise in small GC cohorts (p.~13, lines~462--464).
 
 
 
 
-\section*{Section XXX}
+\section*{Discussion}
 
-\subsection*{Comment X}
+\subsection*{Comment 1}
 Could better connect results to prior transfer learning studies in oncology.
 
-\subsection*{Response X}
+\subsection*{Response 1}
 We thank the reviewer for this insightful suggestion.
-In response, we added a new paragraph (p.~10, paragraph~2, lines~335--342) that connects our EHR-based cross-cancer transfer results to prior transfer learning studies in oncology.
-\begin{quote}
-Our findings are consistent with prior reports that transfer learning improves oncologic prediction under label scarcity across various data modalities.
-.........
-\end{quote}
+In response, we added a new paragraph (p.~13, lines~449--456) that connects our EHR-based cross-cancer transfer results to prior transfer learning studies in oncology.
+%\begin{quote}
+%Our findings are consistent with prior reports that transfer learning improves oncologic prediction under label scarcity across various data modalities.
+%.........
+%\end{quote}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Response to Comments on English Language}
 
-\subsection*{Point 1}
-\textit{[Copy Reviewer comment on English language, if present.]}
 
-\subsection*{Response}
-\textcolor{red}{We have carefully revised the manuscript for clarity, grammar, and stylistic quality.}
+\subsection*{Comment 2}
+A brief comparison with real-world deployment feasibility or computational efficiency would be useful.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Additional Clarifications to the Editor}
-We respectfully note that the revisions requested by the reviewers have been fully incorporated into the manuscript. All modifications are highlighted in \textcolor{red}{red}. We appreciate the editor’s guidance and remain available to provide any additional information.
+\subsection*{Response 2}
+We thank the reviewer for this helpful suggestion. In the revised manuscript, we have added a paragraph in the Discussion to comment on real-world deployment feasibility and computational considerations (p.~15, lines~536--551).
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\bibliographystyle{plainnat}
-\bibliography{references} % Replace ‘references.bib’ with your bib file name.
+
+\section*{Conclusions}
+
+\subsection*{Comment 1}
+Could highlight specific next steps (e.g., external multi-institution validation).
+
+\subsection*{Response 1}
+We thank the reviewer for this helpful suggestion.
+In the revised Conclusions, we now explicitly emphasize that our framework should be regarded as a proof-of-concept whose real-world utility and generalizability must be confirmed in future multi-center external validation studies, and we highlight external multi-site validation as a key next step before any clinical use (p.~16, lines~616--621).
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\bibliographystyle{plainnat}
+%\bibliography{references} % Replace ‘references.bib’ with your bib file name.
 
 \end{document}

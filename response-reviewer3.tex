@@ -1,0 +1,60 @@
+\documentclass[11pt]{article}
+\usepackage{setspace}
+\usepackage{geometry}
+\usepackage{xcolor}
+\usepackage{natbib}
+\usepackage{cleveref}
+\usepackage{xr}
+
+\externaldocument{gc-transfer}
+
+\geometry{margin=1in}
+
+\begin{document}
+
+\begin{center}
+{\Large \textbf{Responses to Reviewer 3}} \\[6pt]
+%Manuscript ID: \textbf{diagnostics-3950051} \\
+%Title: \textit{Cross-Cancer Transfer Learning for Gastric Cancer Risk Prediction from Electronic Health Records}
+\end{center}
+
+\vspace{1em}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\section*{Summary}
+We sincerely thank the reviewers for their careful reading of our manuscript and for providing insightful comments that helped us improve the clarity and rigor of the work. Below we provide detailed, point-by-point responses to all comments. All revisions are highlighted in the revised manuscript in \textcolor{red}{red}, and the locations of the changes are indicated in each response.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\section*{}
+
+%(p.~X, paragraph~Y, lines~A--B)
+
+\subsection*{Comment 1}
+The abstract is concise but could briefly state sample size (GC cases = 508) to give context.
+
+\subsection*{Response 1}
+We thank the reviewer for this helpful suggestion. In the revised Abstract, we now explicitly report the number of GC cases (508) to provide clearer context for the study cohort (p.~1, line~7).
+
+
+\subsection*{Comment 2}
+In the methods, clarify how missing labs were excluded (you mention exclusion but could note proportion dropped).
+
+\subsection*{Response 2}
+We appreciate the reviewer’s helpful suggestion. 
+In the revised Methods section (Cohort Construction and Features), we also report the impact of this filter on cohort size, noting that it excludes approximately 31\% of initially eligible GC cases and controls and 19--36\% of patients across the four pretraining cancers (p.~4, paragraph~3, lines~164--166).
+
+\subsection*{Comment 3}
+Typographical: minor spacing issues around equations (e.g., Eq. 1 formatting).
+
+\subsection*{Response 3}
+We thank the reviewer for pointing out these typographical issues.
+In the revised manuscript, we carefully checked the equation layout and
+standardized the spacing around the Equations (e.g., \cref{eq:bce,eq:ft_obj} in p.~5 and p.~6, respectively).
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\bibliographystyle{plainnat}
+%\bibliography{references} % Replace ‘references.bib’ with your bib file name.
+
+\end{document}

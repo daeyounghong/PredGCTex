@@ -33,7 +33,7 @@ First, while the overall concept of transferring representations across related 
 
 \subsection*{Response 1}
 We agree with the reviewer that our work builds upon established transfer and multi-task learning frameworks and that its primary contribution is applied rather than algorithmic.
-To better reflect this, we have added new paragraphs in the Introduction (p.~X, paragraph~Y) and Discussion (p.~X, paragraph~Y) to explicitly describe the study as an applied instantiation of multi-task/transfer-learning principles in a gastric cancer setting using structured EHR data, rather than as a proposal of a fundamentally new algorithm.
+To better reflect this, we have added new paragraphs in the Introduction  (p.~3, lines~104--116) to explicitly describe the study as an applied instantiation of multi-task/transfer-learning principles in a gastric cancer setting using structured EHR data, rather than as a proposal of a fundamentally new algorithm.
 
 
 \subsection*{Comment 2}
@@ -45,15 +45,17 @@ We fully agree that the lack of external validation is a major limitation and th
 At present, we do not have access to an independent multi-center or outpatient EHR dataset under appropriate data use agreements, and we regret that, within the constraints of this revision, we were not able to carefully design and evaluate a domain-shift emulation (e.g., cross-year or stratified splits that reflect real differences in practice patterns) that would provide a robust assessment of transportability.
 In light of these practical constraints, we strengthen the manuscript by more clearly articulating this limitation and its implications for deployment.
 
-Specifically, in the Discussion we now (i) describe MIMIC-IV more explicitly as a single-center, predominantly inpatient database and discuss how differences in patient mix, workflows, and practice patterns may limit generalizability to outpatient and multi-institutional settings, and (ii) emphasize that the performance estimates reported here should not be assumed to transfer to other institutions without rigorous external validation and, if necessary, recalibration (p.~X, paragraph~Y, lines~A--B).
-We also revised the Conclusions to frame our work as a proof-of-concept demonstration within a single-center cohort and to state clearly that real-world deployment will require validation on independent multi-center and outpatient EHR cohorts to assess robustness under domain shift (p.~X, paragraph~Y, lines~C--D).
+Specifically, in the Discussion we now (i) describe MIMIC-IV more explicitly as a single-center, predominantly inpatient database and discuss how differences in patient mix, workflows, and practice patterns may limit generalizability to outpatient and multi-institutional settings, and (ii) emphasize that the performance estimates reported here should not be assumed to transfer to other institutions without rigorous external validation and, if necessary, recalibration (p.~15, lines~553--564).
+We also revised the Conclusions to frame our work as a proof-of-concept demonstration within a single-center cohort and to state clearly that real-world deployment will require validation on independent multi-center and outpatient EHR cohorts to assess robustness under domain shift (p.~16, lines~616--621).
 
 
 \subsection*{Comment 3}
 Third, the data representation strategy, selecting the oldest available laboratory values within two years prior to diagnosis, simplifies the temporal dimension at the cost of clinical richness. This choice may obscure longitudinal trends and intra-individual variability that often carry strong predictive signals. While I understand the desire to maintain simplicity and comparability, I would like to see a more detailed justification for this design decision. The authors might also acknowledge that collapsing longitudinal information into a static snapshot could attenuate the discriminative capacity of the model and bias results toward patients with more complete laboratory histories.
 
 \subsection*{Response 3}
-\textcolor{red}{[Insert response and description of revisions.]}
+We thank the reviewer for raising this point.
+In the revised manuscript, we clarify that we chose the \emph{oldest} laboratory value within the two-year window to approximate a screening-like deployment scenario, reduce peri-diagnostic bias from acute work-up, and maintain a simple, comparable tabular representation across cancer cohorts (Methods, pp.~3--4, lines~132--141).
+We also now explicitly acknowledge that collapsing longitudinal trajectories into a single snapshot may attenuate discriminative performance and preferentially include patients with more complete laboratory histories, and we discuss these limitations in the Discussion (p.~15, lines~565--578).
 
 \subsection*{Comment 4}
 Fourth, although the manuscript is technically well detailed, it would benefit from a deeper clinical interpretation of results. The current version focuses exclusively on performance metrics without exploring what features drive the model’s decisions or how those align with known pathophysiological mechanisms. For a paper intended for Diagnostics, interpretability and clinical insight are essential. I strongly recommend adding an analysis of feature importance, such as SHAP or permutation-based approaches, to provide at least a qualitative understanding of which EHR variables most contribute to GC risk according to the model. This would enhance clinical credibility and help bridge the gap between machine learning methodology and real-world applicability.
@@ -62,9 +64,9 @@ Fourth, although the manuscript is technically well detailed, it would benefit f
 We thank the reviewer for emphasizing the importance of interpretability and clinical insight.
 In the revised manuscript, we have added a feature importance analysis for the Transfer model and expanded the clinical interpretation of the results.
 
-First, in the Statistical Analysis subsection of the Materials and Methods, we now describe how we computed feature attributions using DeepLIFT-based SHAP values for the neural network model (p.~X, paragraph~Y).
-Second, we added a new Results subsection entitled ``Feature importance patterns (SHAP)'' (p.~X, paragraph~Y) and a corresponding figure (Figure~\ref{fig:shap-global}).
-Third, we expanded the Discussion to interpret these patterns (p.~X, paragraph~Y).
+First, in the Statistical Analysis subsection of the Materials and Methods, we now describe how we computed feature attributions using DeepLIFT-based SHAP values for the neural network model (p.7, lines~284--290).
+Second, we added a new Results subsection entitled ``Feature importance patterns (SHAP)'' (p.~12, lines~417--426) and a corresponding figure (Figure~\ref{fig:shap-global}).
+Third, we expanded the Discussion to interpret these patterns (p.~14, lines~499--513).
 
 
 \subsection*{Comment 5}
@@ -80,24 +82,23 @@ We have expanded the description of our evaluation protocol to clarify that
 (ii) we report standard deviations or 95\% confidence intervals across these repetitions, and
 (iii) we compute 95\% confidence intervals for AUROC using patient-level bootstrap resampling of the test set (2000 resamples), and apply DeLong’s test for pairwise AUROC comparisons between the Transfer model and each non-transfer baseline (LR, XGB, scratch MLP).
 These additions are highlighted in red in the revised \textit{Statistical Analysis} section
-(\textit{p.~\textbf{XX}, paragraph~2, lines~\textbf{YYY}--\textbf{ZZZ}}).
+(p.~7, lines~266--273).
 
-\item \textit{Tables 2 and 3.}
-In Table~2 (Table~\ref{tab:model-compare-gc1}), we now present AUROC as the mean test performance across repeated runs with the standard deviation ($\pm$) and the 95\% bootstrap confidence interval in parentheses, and we updated the caption to state:
-\emph{``Reported values include the mean test performance across repeated runs with standard deviation ($\pm$), and the 95\% bootstrap confidence interval (parentheses).''}
-In Table~3 (Table~\ref{tab:transfer-by-pretrain-types}), we likewise report AUROC as mean~$\pm$~standard deviation across repetitions and clarify this in the caption:
-\emph{``Reported values include the mean test performance across repeated runs with standard deviation ($\pm$).''}
-These revisions appear in the \textit{Results} section where Tables~\ref{tab:model-compare-gc1} and \ref{tab:transfer-by-pretrain-types} are introduced
-(\textit{p.~\textbf{XX}, paragraph~1, lines~\textbf{YYY}--\textbf{ZZZ}} for Table~\ref{tab:model-compare-gc1};
-\textit{p.~\textbf{XX}, paragraph~1, lines~\textbf{YYY}--\textbf{ZZZ}} for Table~\ref{tab:transfer-by-pretrain-types}).
+\item \textit{Tables~\ref{tab:model-compare-gc1} and Table~\ref{tab:transfer-by-pretrain-types}.}
+In Table~\ref{tab:model-compare-gc1}, we now present AUROC as the mean test performance across repeated runs with the standard deviation ($\pm$) and the 95\% bootstrap confidence interval in parentheses.
+In Table~\ref{tab:transfer-by-pretrain-types}, we likewise report AUROC as mean~$\pm$~standard deviation across repetitions.
+These revisions appear in the \textit{Results} section.
+% where Tables~\ref{tab:model-compare-gc1} and \ref{tab:transfer-by-pretrain-types} are introduced
+%(\textit{p.~\textbf{XX}, paragraph~1, lines~\textbf{YYY}--\textbf{ZZZ}} for Table~\ref{tab:model-compare-gc1};
+%\textit{p.~\textbf{XX}, paragraph~1, lines~\textbf{YYY}--\textbf{ZZZ}} for Table~\ref{tab:transfer-by-pretrain-types}).
 
-\item \textit{Figures 1 and 2.}
-For Figure~1 (Figure~\ref{fig:model-gcrate}) and Figure~2 (Figure~\ref{fig:transfer-combo-gcrate}), we added error bars that represent the 95\% confidence intervals across repetitions for each model and GC label fraction.
-The figure captions were updated to state:
-\emph{``Error bars denote 95\% confidence intervals across repetitions.''}
-These changes are reflected in the figure captions in the \textit{Results} section
-(\textit{p.~\textbf{XX}, caption of Figure~\ref{fig:model-gcrate}, lines~\textbf{YYY}--\textbf{ZZZ}} and
-\textit{p.~\textbf{XX}, caption of Figure~\ref{fig:transfer-combo-gcrate}, lines~\textbf{YYY}--\textbf{ZZZ}}).
+\item \textit{Figure~\ref{fig:model-gcrate} and Figure~\ref{fig:transfer-combo-gcrate}.}
+For Figure~\ref{fig:model-gcrate} and Figure~\ref{fig:transfer-combo-gcrate}, we added error bars that represent the 95\% confidence intervals across repetitions for each model and GC label fraction.
+%The figure captions were updated to state:
+%\emph{``Error bars denote 95\% confidence intervals across repetitions.''}
+%These changes are reflected in the figure captions in the \textit{Results} section
+%(\textit{p.~\textbf{XX}, caption of Figure~\ref{fig:model-gcrate}, lines~\textbf{YYY}--\textbf{ZZZ}} and
+%\textit{p.~\textbf{XX}, caption of Figure~\ref{fig:transfer-combo-gcrate}, lines~\textbf{YYY}--\textbf{ZZZ}}).
 
 \item \textit{Results section: variability, confidence intervals, and DeLong’s test.}
 In Section~3.2, we now explicitly summarize the variability and confidence intervals across repetitions, noting that:
@@ -105,13 +106,13 @@ In Section~3.2, we now explicitly summarize the variability and confidence inter
 (ii) the 95\% bootstrap confidence interval for the Transfer model is shifted upward relative to that of the scratch MLP (with partial overlap due to the moderate size of the GC test set), and
 (iii) pairwise DeLong’s test on the common GC test set shows that the Transfer model achieves significantly higher AUROC than LR and XGB ($p = 0.0023$ and $p = 0.0433$, respectively), whereas the improvement over the scratch MLP does not reach conventional significance ($p = 0.1231$), consistent with a modest effect size and finite-sample uncertainty.
 These additions are highlighted in red in the \textit{Comparison of Models} subsection
-(\textit{p.~\textbf{XX}, paragraph~2--3, lines~\textbf{YYY}--\textbf{ZZZ}}).
+(pp.~8--9, lines~327--342).
 
 \item \textit{Results section: stability across GC label fractions.}
 In Section~3.3, we further comment on the repetition-level confidence intervals in Figure~\ref{fig:model-gcrate}, emphasizing that the Transfer model maintains relatively narrow and nearly constant intervals across GC sampling rates, whereas LR, XGB, and the scratch MLP show wider dispersion under label scarcity.
 This provides an explicit assessment of model stability across repeated experiments.
 The corresponding sentences are highlighted in red in the \textit{Model performance under reduced GC training labels} subsection
-(\textit{p.~\textbf{XX}, paragraph~2, lines~\textbf{YYY}--\textbf{ZZZ}}).
+(p.~10, lines~369--374).
 
 \item \textit{Discussion section: interpretation of uncertainty and effect size.}
 In Section~4, we now explicitly interpret these uncertainty estimates, stating that
@@ -119,7 +120,7 @@ In Section~4, we now explicitly interpret these uncertainty estimates, stating t
 (ii) the relatively wide and partially overlapping CIs mainly reflect finite-sample uncertainty in the moderately sized GC test cohort.
 We also discuss that pretraining acts as an implicit regularizer that yields tighter and more stable confidence intervals for the Transfer model under label scarcity.
 These revisions are highlighted in red in the \textit{Discussion} section
-(\textit{p.~\textbf{XX}, paragraph~3--4, lines~\textbf{YYY}--\textbf{ZZZ}}).
+(p.~13, lines~457--471).
 \end{itemize}
 
 
@@ -128,7 +129,7 @@ These revisions are highlighted in red in the \textit{Discussion} section
 In the discussion, the authors correctly identify potential biases due to the lab-complete inclusion criterion, but this issue deserves more attention. By excluding patients with missing laboratory values, the study may have preferentially selected individuals with greater healthcare utilization, thereby limiting representativeness. I would appreciate a more explicit reflection on how this bias might affect the model’s calibration or external generalization.
 
 \subsection*{Response 6}
-We thank the reviewer for highlighting this important point. In the revised manuscript, we have expanded the Discussion to provide a more explicit analysis of the selection bias induced by the lab-complete inclusion criterion (p.~X, paragraph~Y, lines~A--B).
+We thank the reviewer for highlighting this important point. In the revised manuscript, we have expanded the Discussion to provide a more explicit analysis of the selection bias induced by the lab-complete inclusion criterion (pp.~15--16, lines~579--595).
 
 
 
@@ -136,28 +137,24 @@ We thank the reviewer for highlighting this important point. In the revised manu
 Regarding the broader scientific context, the paper would benefit from a more comprehensive engagement with recent literature on transfer and self-supervised learning from EHRs, particularly work published in 2023–2025 that explores contrastive pretraining or masked feature modeling. These methods are now widely regarded as state-of-the-art for sample-efficient representation learning. Even if the authors’ approach remains supervised, a discussion situating their work relative to these directions would make the contribution clearer and more current.
 
 \subsection*{Response 7}
-We appreciate this insightful suggestion. In the revised manuscript, we have added a dedicated paragraph in the \textit{Introduction} (p.~2, paragraph~5, lines~65--73) to situate our work within the landscape of recent self-supervised and foundation-model research for EHRs.
-\begin{quote}
-Recent work has increasingly explored self-supervised pretraining and EHR foundation models, which learn general-purpose patient representations using contrastive or masked-feature objectives before task-specific fine-tuning~\citep{Xia2024ContrastiveEHR,Mataraso2025EHRFM,Guo2023SharedEHRFM}.
-.....
-\end{quote}
+We appreciate this insightful suggestion. In the revised manuscript, we have added a dedicated paragraph in the \textit{Introduction} (p.~2, paragraph~5, lines~73--81) to situate our work within the landscape of recent self-supervised and foundation-model research for EHRs.
+%\begin{quote}
+%Recent work has increasingly explored self-supervised pretraining and EHR foundation models, which learn general-purpose patient representations using contrastive or masked-feature objectives before task-specific fine-tuning~\citep{Xia2024ContrastiveEHR,Mataraso2025EHRFM,Guo2023SharedEHRFM}.
+%.....
+%\end{quote}
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Response to Comments on English Language}
 
-\subsection*{Point 1}
-\textit{[Copy Reviewer comment on English language, if present.]}
+\subsection*{Comment 8}
+Finally, I encourage the authors to provide explicit information on code availability or reproducibility plans. Since the dataset (MIMIC-IV) is publicly accessible, releasing model code or training scripts would enable full replication of results, which is increasingly expected in computational medicine research. This would also enhance the manuscript’s transparency and impact.
 
-\subsection*{Response}
-\textcolor{red}{We have carefully revised the manuscript for clarity, grammar, and stylistic quality.}
+\subsection*{Response 8}
+We thank the reviewer for highlighting the importance of reproducibility and code availability. In the revised manuscript, we now explicitly describe our plans to release the implementation used in this study (p.~7, lines~300--303).
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Additional Clarifications to the Editor}
-We respectfully note that the revisions requested by the reviewers have been fully incorporated into the manuscript. All modifications are highlighted in \textcolor{red}{red}. We appreciate the editor’s guidance and remain available to provide any additional information.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\bibliographystyle{plainnat}
-\bibliography{references} % Replace ‘references.bib’ with your bib file name.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\bibliographystyle{plainnat}
+%\bibliography{references} % Replace ‘references.bib’ with your bib file name.
 
 \end{document}
