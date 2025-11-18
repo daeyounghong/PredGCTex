@@ -142,18 +142,16 @@ We posit that cancers within the gastrointestinal/hepatopancreatobiliary spectru
 %Early identification of gastric cancer (GC) risk from electronic health records (EHRs) could enable timelier endoscopy.
 \textbf{Methods:}
 %We developed a cross-cancer transfer learning framework (Transfer) that pre-trains a multilayer perceptron (MLP) on non-GC gastrointestinal/hepatopancreatobiliary cancers (colorectal, esophageal, liver, pancreatic) and then adapts to GC using only structured variables from the de-identified MIMIC-IV v3.1 database.
-We developed a cross-cancer transfer learning framework (TransferGC) on structured EHR data from the MIMIC-IV database, \textcolor{red}{including 508 GC cases in the target cohort}, that pretrains on non-gastric gastrointestinal/hepatopancreatobiliary cancers (colorectal, esophageal, liver, pancreatic) and then adapts to GC using only structured variables. We compared transfer variants against strong non-transfer baselines (logistic regression, XGBoost, architecturally matched multilayer perceptron), with AUROC and average precision (AP) as primary endpoints and F1 and sensitivity/specificity as secondary endpoints.
+We developed a cross-cancer transfer learning framework (TransferGC) on structured EHR data from the MIMIC-IV database, including 508 GC cases in the target cohort, that pretrains on non-gastric gastrointestinal/hepatopancreatobiliary cancers (colorectal, esophageal, liver, pancreatic) and then adapts to GC using only structured variables. We compared transfer variants against strong non-transfer baselines (logistic regression, XGBoost, architecturally matched multilayer perceptron), with AUROC and average precision (AP) as primary endpoints and F1 and sensitivity/specificity as secondary endpoints.
 \textbf{Results:}
 In the full-label setting, Transfer achieved AUROC $0.854$ and AP $0.600$, outperforming logistic regression (LR), extreme gradient boosting (XGB) and improving over the scratch MLP in AUROC ($+0.024$) and F1 ($+0.027$), while AP was essentially tied (Transfer $0.600$ vs.\ MLP $0.603$).
 As GC labels were reduced, Transfer maintained the strongest overall performance.
 \textbf{Conclusions:}
 %Cross-cancer transfer on EHRs suggests a potentially sample-efficient strategy to GC risk modeling—facilitating scalable deployment and helping prioritize endoscopic evaluation within routine workflows. By reusing related cancer cohorts to bootstrap GC representation learning, the approach strengthens early-risk identification under label scarcity and supports clinician decision-making at the point of care.
-\textcolor{red}{
 %Cross-cancer transfer on EHRs suggests a sample-efficient, deployment-ready strategy for GC risk modeling, particularly for health systems with limited GC labels but existing GI/HPB cancer cohorts, and may help prioritize endoscopic evaluation and follow-up within routine workflows. By reusing related cancer cohorts to bootstrap GC representation learning, the approach strengthens early-risk identification under label scarcity and supports clinician decision-making at the point of care.
 Cross-cancer transfer on structured EHR data suggests a sample-efficient route to GC risk modeling under label scarcity. 
 However, because all models were developed and evaluated using a single-center inpatient dataset, external validation on multi-center and outpatient cohorts will be essential to establish generalizability before deployment. 
 If confirmed in future studies, the proposed framework could be integrated into EHR-based triage and clinical decision support workflows to flag patients at elevated GC risk for timely endoscopy and specialist referral.
-}
 }
 %Cross-cancer transfer on structured EHRs offers a generalizable, sample-efficient approach to GC risk modeling based on electronic health records (EHRs)}
 
@@ -244,9 +242,7 @@ Despite these advances, most prior studies have focused on within-cancer predict
 %Pancreatic cancer frequently perturbs glucose metabolism; dysglycemia and diabetes are associated with GC risk, suggesting that encoders exposed to glucose/HbA1c dynamics may learn representations transferable to GC without implying causation~\citep{Shimoyama2013DMGC,Yoon2013DMGC,Guo2022DMGC}. 
 %These cross-cancer regularities motivate leveraging non-GC cohorts to improve sample efficiency for GC modeling.
 
-{\color{red}
 Across gastrointestinal (GI) and hepatopancreatobiliary (HPB) malignancies, several clinical and laboratory signatures that are visible in structured EHRs recur across tumor types and are directly relevant for GC. Luminal GI tumors, particularly colorectal and gastric cancers, often present with chronic occult bleeding and iron-deficiency anemia (IDA); population-based studies using primary care or administrative data show that anemia and low hemoglobin are strong early signals for colorectal cancer, and clinical practice updates emphasize that otherwise unexplained IDA in adults should prompt evaluation of the upper and lower GI tract for malignancy~\citep{Hamilton2008CRC,Aksoy2019CBC,Krieg2024IDA,AGA2024IDA}. In chronic liver disease and primary liver cancer, IDA frequently co-occurs with systemic inflammation and malnutrition, and biomarkers such as albumin, C-reactive protein, neutrophil–lymphocyte ratio, and platelet–lymphocyte ratio are prognostic in both liver cancer and GC~\citep{Stein2016Anemia,Gkamprela2017CLDIDA,Crumley2010Albumin,Kim2020Inflam}. Metabolic syndrome and dysglycemia form another shared axis: large cohort and meta-analytic studies link diabetes and metabolic syndrome not only to colorectal and pancreatic cancer risk but also to increased GC incidence~\citep{MetS_CRC_2021,Zhong2023MetS_PC,Shimoyama2013DMGC,Yoon2013DMGC,Guo2022DMGC}. Taken together, these data suggest that routinely collected features such as complete blood count indices, basic chemistries, and ICD-derived codes for IDA, liver disease, diabetes, and other metabolic comorbidities encode biologically meaningful cross-cancer information. A multi-cancer pretraining stage can therefore exploit this shared structure to learn representations that are transferable to GC.
-}
 
 
 %Across gastrointestinal (GI) and hepatopancreatobiliary (HPB) malignancies, multiple EHR-visible laboratory and clinical signatures overlap with those leveraged for GC detection. 
@@ -270,16 +266,12 @@ Deep learning (DL) provides a principled way to learn non-linear interactions fr
 When labels for GC are limited, transfer learning and multi-task learning can mitigate data scarcity by first inducing shared, cancer-agnostic representations on related cancers and then adapting them to GC~\citep{Caruana1997_MTL,Pan2010_TLsurvey,Yosinski2014_transferable}. 
 In this paradigm, DL primarily functions as a representation learner that captures cross-cancer laboratory signatures expected to recur in GC, thereby improving sample efficiency and stability during adaptation.
 
-\textcolor{red}{
 Recent work has increasingly explored self-supervised pretraining and EHR foundation models, which learn general-purpose patient representations using contrastive or masked-feature objectives before task-specific fine-tuning~\citep{Xia2024ContrastiveEHR,Mataraso2025EHRFM,Guo2023SharedEHRFM}.
 Our work is complementary to these efforts: instead of learning a general-purpose foundation model from very large unlabeled corpora, we study a supervised transfer setting in which labeled non-GC cancer cohorts are used to pre-train a neural encoder and then adapt it to GC.
 This design examines how effectively structured variables and cross-cancer label supervision can be leveraged for GC representation learning, while remaining compatible with future integration of self-supervised objectives.
-}
 
-\textcolor{red}{
 We focus our initial modeling on routinely collected structured EHR variables (demographics, ICD-derived comorbidities, and routine laboratory tests) since these variables are ubiquitously available across care settings, standardized, and low-burden to obtain, which makes models straightforward to deploy in real-world workflows \citep{read2023cancers,huang2022jco}.
 We therefore treat structured EHRs as a deployment-friendly starting point; integrating imaging and notes is an important direction for future work once the structured-only baseline is firmly established.
-}
 
 % read2023cancers - An additional limitation is that these models do not incorporate additional clinical history such as the findings of prior EGD or colonoscopy procedures, but we intentionally chose to focus on readily ascertainable parameters from existing EHR data for easier potential use in the future.
 % huang2022jco - There is increasing interest in leveraging EHR-based data sources for the development and validation of cancer risk models, as such models may be rapidly translated to real-world clinical practice.
@@ -287,8 +279,6 @@ We therefore treat structured EHRs as a deployment-friendly starting point; inte
 Accordingly, we aimed to investigate a cross-cancer transfer-learning paradigm with deep learning based on EHR data: we pre-train a shared multilayer-perceptron (MLP) backbone on non-gastric GI/HPB cancers using routinely collected EHR variables (demographics, diagnoses/ICD codes, and laboratory values) and then adapt it to GC via fine-tuning. 
 We evaluate this hypothesis retrospectively in the MIMIC-IV v3.1 EHR database \citep{Johnson2024MIMICIV}, restricting inputs to structured EHR data available without using diagnostic endoscopy or pathology.
 
-{
-\color{red}
 From a clinical perspective, the proposed framework is especially
 relevant for health systems that see relatively few GC cases but routinely manage
 other gastrointestinal and hepatopancreatobiliary malignancies.
@@ -298,16 +288,12 @@ for GC under label scarcity without requiring new data collection.
 Beyond GC, the same cross-cancer transfer framework can be directly adapted to
 other underrepresented cancers or rare tumor subtypes where labeled data are
 limited but related malignancies are more prevalent.
-}
 
-{
-\color{red}
 From a methodological standpoint, our framework is deliberately aligned with established multi-task and transfer-learning formulations~\citep{Caruana1997_MTL,Pan2010_TLsurvey,Yosinski2014_transferable}.
 Classical multi-task learning typically trains a single model jointly on multiple tasks and reports performance averaged across those tasks.
 In contrast, we treat colorectal, esophageal, liver, and pancreatic cancers as auxiliary source tasks that are used only during pretraining, and we evaluate performance exclusively on a single target task (gastric cancer) under varying degrees of label scarcity.
 Our primary goal is to ask an applied question: to what extent can cross-cancer supervision on routine laboratory and comorbidity profiles improve GC risk modeling under label scarcity when using only structured EHR variables?
 Accordingly, the contribution of this work is mainly empirical and translational: we provide the assessment of cross-cancer transfer on structured EHRs for GC, including (i) label-fraction sweeps that emulate low-resource GC settings, (ii) ablations on pretraining source-cancer composition, and (iii) comparisons between freezing versus full fine-tuning of the shared encoder.
-}
 
 
 
@@ -352,11 +338,9 @@ For each cancer, we identified cases by the earliest qualifying ICD-9/10 diagnos
 We constructed features as follows.
 For cases, we anchored on the admission during which the cancer was diagnosed.
 %Features include demographics (age, sex), binary ICD-derived comorbidity indicators (e.g., diabetes, GERD, ulcers) from the history up to and including the admission start date, and the oldest available values of routine laboratory tests (CBC/CMP) observed within the 730 days prior to (and including) the admission start date (or from all available records for controls).
-\textcolor{red}{
 For CBC and CMP laboratories, we summarized each test using the oldest available value observed within the 730 days prior to (and including) the admission start date for cases (and across the full available record for controls).
 This design was chosen to approximate a screening-like deployment scenario in which risk scores would be computed at relatively routine encounters rather than only immediately before diagnosis, and to harmonize feature construction across cancers with heterogeneous visit frequencies and order sets using a simple tabular representation.
 We acknowledge that this summary collapses longitudinal trajectories to a single snapshot and therefore does not capture intra-individual trends or variability; we revisit the implications of this choice in the Limitations.
-}
 
 We restricted the inputs to routinely collected, structured EHR variables. 
 Feature selection was informed by prior gastric cancer–related studies~\citep{park2024SHapley,huang2022jco,Kim2024EHRGC} 
@@ -369,12 +353,8 @@ Laboratory features consisted of CBC indices and basic chemistries, including he
 
 We then enforced a lab-complete inclusion criterion: patients with any missing value in the required laboratory feature set were excluded prior to modeling.
 For each cancer, controls were sampled at a fixed $1{:}3$ case:control ratio from patients without a diagnosis of the cancer (ever), and the same lab-complete criterion was applied to controls.
-\textcolor{red}{
 This filter excludes approximately 31\%, 36\%, 19\%, 31\% and 25\% of initially eligible GC, CC, EC, LC and PC cohorts, respectively.
-}
-\textcolor{red}{
 In addition, this case–control design yields cohorts with one case per three controls, which partially mitigates the extreme class imbalance of GC in the full MIMIC-IV population while preserving a majority of controls.
-}
 Identical preprocessing was applied to cases and controls; numerical features were standardized (z-scored) using statistics computed on the training split only.
 
 
@@ -405,7 +385,6 @@ We first define the class-weighted binary cross-entropy (BCE) used throughout.
 Let $\sigma(t)=\frac{1}{1+\exp(-t)}$ denote the logistic sigmoid.
 Given a logit $z\in\mathbb{R}$ and a binary label $y\in\{0,1\}$, the per-sample loss is
 \begin{equation}
-\color{red}
   \label{eq:bce}
   \ell_{\mathrm{BCE}}(z,y;\alpha)
   = -\alpha y\log \sigma(z)-(1-y)\log \big(1-\sigma(z)\big),
@@ -453,7 +432,6 @@ For input features $x$, by using the pretrained backbone encoder $\enc{\encP}$, 
 Let $\pretrainP$ denote the pretrained model parameters of backbone encoder.
 For fine-tuning, we first initialize the model parameters of backbone $\encP$ to $\pretrainP$, and then jointly optimize the backbone $\enc{\encP}$ and the GC head $\head{\GC}$ by minimizing the weighted BCE for the GC dataset:
 \begin{equation}
-\color{red}
 \label{eq:ft_obj}
 \mathcal{L}_{\mathrm{ft}}(\phi,\headP{\GC}) = \mathbb{E}_{(x,y)\sim \mathcal{D}_{\GC}}\!\big[\ell_{\mathrm{BCE}}(\head{\GC}(\enc{\pretrainP}(x)),y;\alpha)\big]+\ftDecayC \big( \|\phi\|_2^2 + \|\headP{\GC}\|_2^2 \big),
 \end{equation}
@@ -487,21 +465,17 @@ We further split the training set so that 20\% of it was used as a validation se
 In all splits, stratified sampling was performed to ensure that the proportion of cases and controls remained consistent across the training, validation, and test sets. 
 For a given hyperparameter setting, we trained model parameters using the training set, and computed the model performances for the validation and test sets. 
 The evaluation metrics included the area under the receiver operating characteristic curve (AUROC), average precision (AP), sensitivity, specificity, and F1-score. 
-\textcolor{red}{
 To assess calibration of the GC risk models, we additionally constructed reliability diagrams on the held-out GC test set. 
 For each model, predicted probabilities were grouped into disjoint bins on $[0,1]$, and we plotted the observed fraction of GC cases against the mean predicted probability in each bin. 
 We also summarized miscalibration using the expected calibration error (ECE), defined as the average absolute difference between observed and predicted risk across bins, weighted by bin size.
-}
 This entire procedure was repeated 10 times with different data splits. 
 To optimize hyperparameters, we computed the mean AUROC on the validation set across these repetitions and selected hyperparameters based on this mean AUROC. 
 The final model performance was then evaluated on the independent test split, and we report the mean performance across the 10 repetitions as the final test result. 
-\textcolor{red}{
 To quantify both model stability and uncertainty, we also report standard deviations or 95\% confidence intervals across repetitions. 
 In addition, we computed 95\% confidence intervals (CIs) for AUROC using patient-level bootstrap resampling of the test set with 2000 resamples.
 To formally assess whether differences in AUROC between models sharing the same test set were statistically significant, 
 we also applied DeLong's test for ROC curves to obtain $p$-values for 
 pairwise AUROC comparisons between the Transfer model and each baseline (LR, XGB, and scratch MLP).
-}
 
 Metrics such as AUROC and average precision (AP) were computed directly from the continuous prediction scores without applying any threshold. 
 For threshold-dependent measures, operating points were determined using the validation split and then applied to the independent test split. 
@@ -509,16 +483,11 @@ Specifically, the threshold for the F1-score was chosen as the point that maximi
 For sensitivity and specificity, following the approach in \citep{read2023cancers}, we selected the threshold that provided the best balance between the two metrics—that is, the point on the validation receiver operating characteristic (ROC) curve that was closest to the ideal point (FPR=0, TPR=1) on the validation ROC curve.
 All reported sensitivity and specificity values on the test set were based on this validation-derived threshold.
 
-{
-\color{red}
 To provide explanations of the Transfer model, we additionally computed SHapley Additive Explanation (SHAP) values.
 SHAP attributions for the neural network were obtained using the DeepLIFT-based approximation for deep models~\citep{Lundberg2017SHAP,Shrikumar2017DeepLIFT}.
 For each patient in the held-out GC test set, SHAP values were calculated for every input feature, and feature importance was summarized as the mean absolute SHAP value across patients.
 The larger values indicate a greater overall influence of that feature on the model's predicted GC risk.
-}
 
-{
-\color{red}
 Taken together, class imbalance between cancer cases and controls was handled using a combination of
 (i) a nested case–control design with a fixed $1{:}3$ case:control sampling ratio,
 (ii) stratified sampling to preserve the case proportion across training, validation, and test splits,
@@ -526,12 +495,9 @@ Taken together, class imbalance between cancer cases and controls was handled us
 and (iv) evaluation based on metrics that are less sensitive to class prevalence, including AUROC and average precision.
 Threshold-dependent metrics such as sensitivity, specificity, and F1-score were computed using thresholds
 selected on the validation set, which reduces instability due to class imbalance when evaluating on the independent test set.
-}
 
-{\color{red}
 To facilitate reproducibility, we will release a minimal but complete implementation of the proposed framework in a public GitHub repository upon acceptance of this manuscript. 
 Because access to MIMIC-IV requires credentialing and a data-use agreement, the repository will be designed to work with any user who has approved access to MIMIC-IV.
-}
 %The repository will include code for cohort construction from MIMIC-IV (based on the inclusion and exclusion criteria described above), feature preprocessing, model training and evaluation for all compared models (logistic regression, XGBoost, MLP, and transfer-learning variants), and scripts to regenerate the main tables and figures. Because access to MIMIC-IV requires credentialing and a data-use agreement, the repository will be designed to work with any user who has approved access to MIMIC-IV and can recreate the same cohort under the same criteria.
 
 %\subsection{Hyperparameter Search}
@@ -594,7 +560,7 @@ In aggregate, the non-GC sources contribute 4{,}559 cases and 13{,}677 controls 
 \subsection{Comparison of Models}
 %\input{tex_and_figs/table_model_compare_gc1.tex}
 \begin{table}[htbp]
-\caption{Performance of models.\label{tab:model-compare-gc1} {\color{red} Reported values include the mean test performance across repeated runs with standard deviation ($\pm$), and the 95\% bootstrap confidence interval (parentheses).}}
+\caption{Performance of models.\label{tab:model-compare-gc1} Reported values include the mean test performance across repeated runs with standard deviation ($\pm$), and the 95\% bootstrap confidence interval (parentheses).}
 %\begin{adjustwidth}{-\extralength}{0cm}
 \small
 \begin{tabularx}{\textwidth}{P{1cm}P{4cm}CCCCC}
@@ -605,10 +571,10 @@ Model & AUROC & AP & Sensitivity & Specificity & F1 \\
 %XGB & 0.808 & 0.549 & 0.692 & 0.737 & 0.556 \\
 %MLP & 0.830 & 0.603 & 0.782 & 0.738 & 0.609 \\
 %Transfer & 0.854 & 0.600 & 0.768 & 0.786 & 0.636 \\
-LR & $0.812${\color{red}$\pm0.002$ (0.759--0.862)} & 0.518 & 0.707 & 0.755 & 0.578 \\
-XGB & $0.808${\color{red}$\pm0.010$ (0.760--0.851)} & 0.549 & 0.692 & 0.737 & 0.556 \\
-MLP & $0.830${\color{red}$\pm0.006$ (0.780--0.874)} & 0.603 & 0.782 & 0.739 & 0.609 \\
-Transfer & $0.854${\color{red}$\pm0.007$ (0.811--0.893)} & 0.600 & 0.768 & 0.786 & 0.636 \\
+LR & $0.812\pm0.002$ (0.759--0.862) & 0.518 & 0.707 & 0.755 & 0.578 \\
+XGB & $0.808\pm0.010$ (0.760--0.851) & 0.549 & 0.692 & 0.737 & 0.556 \\
+MLP & $0.830\pm0.006$ (0.780--0.874) & 0.603 & 0.782 & 0.739 & 0.609 \\
+Transfer & $0.854\pm0.007$ (0.811--0.893) & 0.600 & 0.768 & 0.786 & 0.636 \\
 \bottomrule
 \end{tabularx}
 %\end{adjustwidth}
@@ -633,14 +599,11 @@ Overall, relative to the scratch MLP, Transfer improved AUROC by $+0.024$ and F1
 %Although the CIs partially overlap, the means and narrow standard deviations across repetitions together indicate that the observed AUROC advantage of the Transfer model over the baselines is modest in absolute magnitude but statistically consistent and not driven by a single random training.
 %}
 
-\textcolor{red}{
 Across the ten repetitions, the standard deviations of test AUROC were small for all models ($\leq 0.01$), suggesting stable performance estimates rather than isolated favorable runs.
 For AUROC, the 95\% bootstrap confidence interval for the Transfer model (0.816--0.896) was shifted upward relative to that of the scratch MLP (0.781--0.883), consistent with a modest but reproducible gain.
 Because the held-out GC test set contains a limited number of positive cases, these bootstrap CIs are relatively wide and partially overlapping across models.
 In this sense, the width of the CIs primarily quantifies how much the performance would fluctuate if a similarly sized test cohort were resampled, while the consistent shift in the mean AUROC toward the Transfer model suggests a small but robust advantage.
-}
 
-\textcolor{red}{
 Pairwise AUROC comparisons using DeLong's test mirrored this pattern.
 On the common GC test set, the Transfer model achieved significantly higher AUROC than LR and XGB 
 ($p=0.0023$ and $p=0.0433$, respectively), whereas its advantage over the scratch MLP did not reach 
@@ -648,24 +611,19 @@ conventional statistical significance ($p=0.1231$).
 Given the moderate size of the held-out GC test set and the limited number of positive cases, 
 this non-significant result for the Transfer versus MLP comparison likely reflects both the modest effect size 
 and the finite-sample uncertainty rather than the absence of any performance difference.
-}
 
-\textcolor{red}{
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.45\textwidth]{tex_and_figs/fig_reliability_gc1.pdf}
-    \caption{{\color{red}Reliability diagram showing observed GC incidence versus mean predicted probability. 
-    The diagonal line denotes perfect calibration.}}
+    \caption{Reliability diagram showing observed GC incidence versus mean predicted probability. 
+    The diagonal line denotes perfect calibration.}
     \label{fig:reliability-gc1}
 \end{figure}
-}
 
-\textcolor{red}{
 With respect to calibration, the reliability diagram in Figure~\ref{fig:reliability-gc1} shows that all four models are reasonably well aligned with the identity line overall. 
 The non-linear models (XGB, MLP, and Transfer) tend to occupy slightly over-confident regions, particularly at higher predicted probabilities, whereas the logistic regression (LR) model remains more conservative. 
 Consistently, the expected calibration error (ECE) was smallest for LR (0.072), followed by XGB (0.089) and the scratch MLP (0.119), with the Transfer model exhibiting the largest ECE (0.161). 
 Thus, although the Transfer model achieves the best discrimination, its predicted risks are somewhat more over-confident than those of LR and may benefit from post hoc recalibration before deployment.
-}
 
 
 \subsection{Model performance under reduced GC training labels}
@@ -701,7 +659,7 @@ Thus, although the Transfer model achieves the best discrimination, its predicte
 \subfloat[AUROC]{\includegraphics[width=0.48\textwidth]{tex_and_figs/fig_model_gc_rate_auroc.pdf}}
 \subfloat[AP]{\includegraphics[width=0.48\textwidth]{tex_and_figs/fig_model_gc_rate_ap.pdf}} \\
 \subfloat[F1]{\includegraphics[width=0.48\textwidth]{tex_and_figs/fig_model_gc_rate_f1.pdf}}
-\caption{Performance across the GC sampling rate $r$. Lower $r$ simulates fewer labeled GC training cases. \textcolor{red}{Error bars denote 95\% confidence intervals across repetitions.}\label{fig:model-gcrate}}
+\caption{Performance across the GC sampling rate $r$. Lower $r$ simulates fewer labeled GC training cases. Error bars denote 95\% confidence intervals across repetitions.\label{fig:model-gcrate}}
 \end{figure}
 As summarized in Figure~\ref{fig:model-gcrate} (AUROC, AP, and F1 panels), we varied the GC sampling rate $r \in \{1.0, 0.5, 0.2, 0.1\}$ to quantify robustness under limited GC labels.
 For each $r$, we applied stratified sampling at proportion $r$ on the GC training partition (preserving the case{:}control ratio), while keeping the GC validation and test partitions fixed.
@@ -714,11 +672,9 @@ Across all rates, the Transfer model maintains the best discrimination and preci
 These findings indicate that pretraining on related non-GC cancers consistently improves GC risk modeling across a wide range of labeled-data regimes, with the largest improvements in AP and F1 under the scarcest-label settings.
 %At \texttt{gc\_rate}$=0.01$, Transfer achieves AUROC~0.916 and AP~0.765, surpassing the scratch MLP (AUROC~0.813, AP~0.546) by $+0.103$ AUROC and $+0.219$ AP, and yielding the highest F1 (0.715 vs.\ 0.600; $+0.115$).
 %The advantage remains substantial at \texttt{gc\_rate}$=0.02$ (AUROC $+0.075$, AP $+0.165$, F1 $+0.088$) and \texttt{gc\_rate}$=0.05$ (AUROC $+0.058$, AP $+0.133$, F1 $+0.085$). 
-\textcolor{red}{
 When visualized with repetition-level confidence intervals in Figure~\ref{fig:model-gcrate}, this effect is also reflected in model stability.
 As $r$ decreases, the error bars for LR, XGB, and the scratch MLP can widen, indicating increasing variability across repeated training runs.
 In contrast, the Transfer model maintains relatively narrow and nearly constant intervals over $r$, suggesting that cross-cancer pretraining yields more stable performance estimates under label scarcity and reduces sensitivity to sampling variability in the GC training cohort.
-}
 
 %With more abundant labels, the gap narrows but persists.
 %At \texttt{gc\_rate}$=0.10$, Transfer improves over MLP by $+0.040$ AUROC, $+0.097$ AP, and $+0.048$ F1; at \texttt{gc\_rate}$=0.50$, the corresponding margins are $+0.013$, $+0.027$, and $+0.027$; and at \texttt{gc\_rate}$=1.00$, Transfer still leads (AUROC 0.938 vs.\ 0.930; AP 0.826 vs.\ 0.811; F1 0.751 vs.\ 0.735).
@@ -730,7 +686,7 @@ In contrast, the Transfer model maintains relatively narrow and nearly constant 
 \subsection{Effect of pretraining source composition}
 %\input{tex_and_figs/table_transfer_by_pretrain_types.tex}
 \begin{table}[htbp]
-\caption{The performance of \emph{Transfer} grouped by pre-train cancer types. {\color{red} Reported values include the mean test performance across repeated runs with standard deviation ($\pm$).}\label{tab:transfer-by-pretrain-types}}
+\caption{The performance of \emph{Transfer} grouped by pre-train cancer types. Reported values include the mean test performance across repeated runs with standard deviation ($\pm$).\label{tab:transfer-by-pretrain-types}}
 \small
 \begin{tabularx}{\textwidth}{P{2.5cm}P{2.5cm}CCCCC}
 \toprule
@@ -747,11 +703,11 @@ Pretrain types & AUROC & AP & Sensitivity & Specificity & F1 \\
 %EC & 0.828 & 0.578 & 0.705 & 0.779 & 0.594 \\
 %CC+EC+LC+PC & 0.854 & 0.600 & 0.768 & 0.786 & 0.636 \\
 %\midrule
-CC & $0.841${\color{red}$\pm0.006$} & 0.568 & 0.792 & 0.763 & 0.632  \\
-PC & $0.838${\color{red}$\pm0.005$} & 0.572 & 0.758 & 0.743 & 0.599 \\
-LC & $0.835${\color{red}$\pm0.007$} & 0.544 & 0.767 & 0.745 & 0.605 \\
-EC & $0.828${\color{red}$\pm0.005$} & 0.578 & 0.705 & 0.779 & 0.594 \\
-CC+EC+LC+PC & $0.854${\color{red}$\pm0.007$} & 0.600 & 0.768 & 0.786 & 0.636 \\
+CC & $0.841\pm0.006$ & 0.568 & 0.792 & 0.763 & 0.632  \\
+PC & $0.838\pm0.005$ & 0.572 & 0.758 & 0.743 & 0.599 \\
+LC & $0.835\pm0.007$ & 0.544 & 0.767 & 0.745 & 0.605 \\
+EC & $0.828\pm0.005$ & 0.578 & 0.705 & 0.779 & 0.594 \\
+CC+EC+LC+PC & $0.854\pm0.007$ & 0.600 & 0.768 & 0.786 & 0.636 \\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -807,7 +763,7 @@ offers potential to further improve generalization for gastric cancer prediction
 	\subfloat[AUROC]{\includegraphics[width=0.48\textwidth]{tex_and_figs/fig_transfer_combo_gc_rate_auroc.pdf}}
 	\subfloat[AP]{\includegraphics[width=0.48\textwidth]{tex_and_figs/fig_transfer_combo_gc_rate_ap.pdf}}\\
 	\subfloat[F1]{\includegraphics[width=0.48\textwidth]{tex_and_figs/fig_transfer_combo_gc_rate_f1.pdf}}
-	\caption{Effect of freezing vs.\ full fine-tuning across GC training label fractions $r$. \textcolor{red}{Error bars denote 95\% confidence intervals across repetitions.}\label{fig:transfer-combo-gcrate}}
+	\caption{Effect of freezing vs.\ full fine-tuning across GC training label fractions $r$. Error bars denote 95\% confidence intervals across repetitions.\label{fig:transfer-combo-gcrate}}
 \end{figure}
 We investigated whether a pretrained backbone should remain fixed during adaptation to gastric cancer (GC) or be allowed to update. Although our pretraining sources (CC/EC/LC/PC) are related to GC, their feature distributions and label–feature couplings are not identical; some degree of source-to-target shift is therefore expected. In such settings, transfer learning and multi-task learning can confer advantages by first inducing shared, cancer-agnostic representations and then adapting them to the target task \citep{Caruana1997_MTL,Pan2010_TLsurvey,Yosinski2014_transferable}. The practical question, however, is whether adaptation should occur only in a newly introduced GC head (with the backbone frozen; \emph{FT-Head}) or across all layers (with the backbone unfrozen; \emph{FT-Full}).
 
@@ -830,12 +786,9 @@ In light of the observed margins at moderate-to-higher label availability and fo
 }
 \label{fig:shap-global}
 \end{figure}
-{
-\color{red}
 Global feature importance for the Transfer model is summarized in Figure~\ref{fig:shap-global} using mean absolute SHAP values computed on the held-out GC test set.
 The top 15 features by mean absolute SHAP value comprised comorbid and exposure-related variables (hypertension, smoking status, family history of cancer, gastroesophageal reflux disease, protein--calorie malnutrition, coronary atherosclerosis, and adverse effects of antineoplastic agents), blood-based indices from the complete blood count (hemoglobin, white blood cell count, red cell distribution width, and monocyte percentage), metabolic/acid--base markers (anion gap and bicarbonate), and basic demographics (age and male sex).
 These results indicate that the model relies on a mixture of demographic, comorbidity, and routine laboratory variables.
-}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -847,48 +800,63 @@ Finally, varying the composition of pretraining sources showed that combining fo
 
 Our findings align with prior observations that risk signals visible in structured EHR data recur across GI/HPB malignancies and therefore can act as transferable supervision for GC~\citep{read2023cancers,Aksoy2019CBC,Krieg2024IDA,Kim2014GIBleed,Stein2016Anemia,Gkamprela2017CLDIDA,Crumley2010Albumin,Shimoyama2013DMGC,Yoon2013DMGC,Guo2022DMGC}. While earlier GC prediction efforts have largely optimized within-cancer models using routine variables~\citep{park2024SHapley,huang2022jco,Kim2024EHRGC}, our results suggest that cross-cancer pretraining helps distill cancer-agnostic representations from noisy labs and comorbidities, which then transfer to GC with improved sample efficiency. This is consistent with established benefits of multi-task and transfer learning on related tasks~\citep{Caruana1997_MTL,Pan2010_TLsurvey,Yosinski2014_transferable}.
 
-\textcolor{red}{
 Our findings are consistent with prior reports that transfer learning improves oncologic prediction under label scarcity across various data modalities.
 In medical imaging, models pre-trained on large source datasets and then fine-tuned on smaller tumor-specific cohorts routinely yield higher discrimination and better generalization \citep{Kim2022TLReview}.
 In omics, cross-cancer transfer learning improves survival or progression prediction \citep{LopezGarcia2020PanCancerTL,Hanczar2022TLGeneExp}.
 %Recent multi-task formulations that learn shared representations across cancers likewise report the largest gains for smaller cohorts~\citep{Lin2024MTLGNN}.
 Our cross-cancer transfer on structured EHR variables parallels these patterns and suggests that cancer-agnostic signals learned from routine labs and comorbidity profiles can be reused to stabilize GC modeling when labels are limited.
-}
 
-
-{\color{red}
+{\color{blue}
 We note that the absolute improvements in AUROC are modest when comparing Transfer with a scratch MLP (Table~\ref{tab:model-compare-gc1}).
 As detailed in the Results section, these gains are consistently observed across repetitions and bootstrap-based uncertainty estimates, despite the moderate size of the held-out GC test set, but we do not claim a dramatic effect size.
 Rather, the main value of the proposed framework lies in its stability and behavior under label scarcity.
+\par}
+{\color{red}
+We note that the absolute improvement in AUROC when comparing Transfer with
+the scratch MLP is modest (Table~\ref{tab:model-compare-gc1}; AUROC $0.854$
+vs.\ $0.830$). As detailed in the Results
+section, these gains are accompanied by improvements in F1 (0.636 vs.\ 0.609)
+and specificity (0.786 vs.\ 0.739), while sensitivity remains broadly similar
+(0.768 vs.\ 0.782). Despite the moderate size of the held-out GC test set, the
+observed differences are consistent across repeated train–test splits and
+bootstrap-based uncertainty estimates. Thus, we do not claim a dramatic
+effect size at the population level, but rather a small and reproducible shift
+in the operating characteristics of the model.
+The main value of the proposed
+framework lies in its stability and behavior under label scarcity.
+}
 As GC training labels are reduced, the relative advantage of Transfer becomes more pronounced in AUROC, AP, and F1 (Figure~\ref{fig:model-gcrate}), suggesting that pretraining on related cancers yields a more stable operating profile when data are limited.
-From a clinical standpoint, such modest but consistent gains in discrimination and F1 at fixed endoscopy capacity can still translate into more accurate prioritization of patients for evaluation, especially in systems where GC labels are sparse but other GI/HPB cancers are commonly seen.
 In line with this, DeLong's test showed statistically significant AUROC improvements of the Transfer model over LR and XGB, 
 while the comparison versus the scratch MLP did not reach conventional significance ($p=0.1231$), 
 which is compatible with a small effect size and limited statistical power given the moderate GC test cohort size.
+
+{\color{blue}
+From a clinical standpoint, such modest but consistent gains in discrimination and F1 at fixed endoscopy capacity can still translate into more accurate prioritization of patients for evaluation, especially in systems where GC labels are sparse but other GI/HPB cancers are commonly seen.
+\par}
+{\color{red}
+From a clinical standpoint, even such modest but consistent gains in discrimination and precision may still be relevant when predictions are used to prioritize patients for resource-intensive investigations such as upper endoscopy. 
+The Transfer model achieves similar sensitivity but higher specificity and F1 than the scratch MLP, implying that, for a fixed endoscopy capacity, a slightly larger fraction of procedures would be directed toward patients who truly have GC and fewer toward those at very low risk. 
+In high-volume settings where only a minority of inpatients can be referred for endoscopy, small improvements in the concentration of true GC cases within the high-risk stratum could translate into earlier diagnosis or fewer unnecessary procedures.
+We did not perform a formal decision-curve or clinical-impact analysis in this work, and our conclusions are therefore limited to conventional discrimination and classification metrics. 
+Future studies should quantify the net clinical benefit of using the proposed transfer-learning model to guide endoscopy referrals, for example by comparing the number of additional GC cases detected and the number of endoscopies avoided per 1,000 patients across a range of clinically plausible risk thresholds.
 }
 
 
-\textcolor{red}{
 From a calibration standpoint, our reliability and ECE analyses indicate that all four models achieve broadly acceptable calibration for GC risk estimation, 
 with the Transfer model showing slightly more over-confident predictions than the logistic regression baseline, 
 supporting the use of post hoc recalibration and prospective evaluation before clinical deployment.
-}
 
 We hypothesize three complementary mechanisms behind the observed gains:
 (i) \textit{representation sharing}—pretraining encourages the backbone to encode recurring EHR patterns that GC also exhibits;
 (ii) \textit{regularization under scarcity}—pretraining reduces the effective hypothesis space, aiding generalization when GC labels are limited;
 and (iii) \textit{optimization stability}—a pretrained initialization improves convergence to better optima compared with training from scratch. The superiority of full fine-tuning over freezing at moderate data availability suggests that some GC-specific re-alignment of shared features is beneficial, whereas freezing can mitigate variance when labels are extremely scarce, producing similar discrimination with fewer trainable degrees of freedom. These observations match classic transfer learning trade-offs between bias and variance~\citep{Pan2010_TLsurvey,Yosinski2014_transferable}.
-\textcolor{red}{
 Consistent with this interpretation, the repetition-level confidence intervals in Figure~\ref{fig:model-gcrate} remain relatively tight and nearly invariant across GC sampling rates for the Transfer model, whereas most baselines exhibit visibly larger dispersion at lower rates.
 This pattern supports the view that pretraining acts as an implicit regularizer that dampens sensitivity to sampling noise in small GC cohorts.
-}
 
 %All single-source pretraining choices (CC, EC, LC, PC) provided meaningful improvements over GC-only training, and combining all four delivered the strongest overall results (Table~\ref{tab:transfer-by-pretrain-types}).
 Compared to single-source pretraining choices (CC, EC, LC, PC), combining all four pretraining choices delivered the strongest overall balance—improving AUROC and F1 versus scratch and yielding an AP essentially on par with it (Table~\ref{tab:transfer-by-pretrain-types}).
 These results imply that (i) each source cancer contributes overlapping but not identical EHR-visible signals; and (ii) diversity across sources can add incremental value. We do not claim that our specific mix is universally optimal; rather, our results motivate future work on principled source selection and weighting schemes that account for relatedness, cohort size, and label quality.
 
-{
-\color{red}
 To further contextualize the model behavior, we inspected global feature importance for the main Transfer model using mean absolute SHAP values (DeepLIFT-based) on the held-out GC test set (Figure~\ref{fig:shap-global}).
 Rather than being driven by a single variable, the model primarily relies on several clinically meaningful axes: 
 (i) anemia and nutritional status, reflected by hemoglobin, red cell distribution width, and protein--calorie malnutrition; 
@@ -897,19 +865,15 @@ Rather than being driven by a single variable, the model primarily relies on sev
 (iv) cardiometabolic and oncologic comorbidities and exposures, including hypertension, smoking, family history of cancer, coronary atherosclerosis, gastroesophageal reflux disease, and adverse effects of antineoplastic agents; and 
 (v) baseline demographic risk (age and sex).
 These groupings are consistent with established clinical links between iron-deficiency anemia, malnutrition, chronic inflammation, cardiometabolic burden, familial predisposition, and gastrointestinal malignancy, supporting the view that the Transfer model is relying on clinically plausible EHR signals rather than spurious artifacts.
-}
 
 %From a clinical standpoint, these models are not intended to replace diagnostic endoscopy but to prioritize patients for timely evaluation and follow-up. Earlier identification of higher-risk patients in routine care could shorten time-to-endoscopy and facilitate detection at more treatable stages, where survival is markedly better~\citep{NCI2023stomach}. The transfer framework is appealing for institutions with few confirmed GC cases but access to other GI/HPB cancer cohorts; pretraining on related cancers can “borrow strength” and stabilize GC performance without requiring specialized data modalities or free-text notes.
 
 
-{\color{red}
 Taken together, these observations indicate that our study should be viewed primarily as an applied instantiation of multi-task and transfer-learning principles in a gastric cancer setting, rather than as a proposal of a fundamentally new algorithm.
 The backbone–head architecture, class-weighted loss, and fine-tuning strategy are intentionally simple and follow standard practice in deep learning for tabular EHR data~\citep{Caruana1997_MTL,Pan2010_TLsurvey,Yosinski2014_transferable}.
 The added value lies in the systematic evaluation of cross-cancer pretraining, label-scarcity regimes, frozen-versus-full fine-tuning variants, and source-composition effects using only deployment-ready structured EHR variables.
-}
 
 
-\textcolor{red}{
 From a clinical standpoint, the proposed framework is not meant to replace
 diagnostic endoscopy, but to support triage and prioritization in routine
 workflows.
@@ -929,21 +893,17 @@ The transfer framework may therefore be appealing for institutions with few
 confirmed GC cases but access to other GI/HPB cancer cohorts; in principle,
 pretraining on related cancers could borrow strength and stabilize GC
 performance, although this remains to be confirmed in external settings.
-}
 
-\textcolor{red}{
 From a deployment perspective, the proposed framework is relatively lightweight. All predictors are derived from routinely collected structured EHR data (demographics, comorbid diagnoses, medications, and basic laboratory tests) that are already available in most hospital information systems. Feature construction relies on simple summary statistics over a pre-specified look-back window and does not require free-text processing or medical imaging pipelines. The final GC risk score is produced by a shallow feed-forward neural network trained on tabular inputs, which can be evaluated efficiently on standard CPU hardware and is amenable to batch scoring of large inpatient cohorts in routine EHR jobs.
 Although we did not perform a formal benchmarking study of computational cost, the small model size and reliance on common laboratory panels suggest that runtime is unlikely to be the main barrier to real-world use.
 Instead, the more critical challenges for deployment are data governance, integration into local EHR workflows, prospective calibration monitoring, and external validation in diverse care settings.
 In addition, consistent with recent guidance on clinical risk prediction tools,
 safe deployment will require careful assessment of model calibration and subgroup fairness
 (e.g., across age, sex, and race/ethnicity), beyond the aggregate results reported here.
-}
 
 This study has several limitations.
 
-{
-\color{red}
+{\color{red}
 First, all experiments were conducted using MIMIC-IV, a de-identified,
 single-center EHR database derived largely from inpatient encounters at a
 U.S. tertiary academic medical center.
@@ -960,35 +920,46 @@ Real-world deployment will require rigorous external validation and, if
 necessary, recalibration on independent multi-center and outpatient EHR
 cohorts to assess robustness under domain shift and to quantify clinical
 impact.
+In a future multicenter or international study, such validation would allow us
+to directly quantify how well the shared encoder and transfer-learning
+framework transport to hospitals with different patient populations, coding
+systems, and laboratory workflows, including higher-incidence regions such as
+East Asia.
+If substantial performance or calibration drift is observed, the model could be
+adapted in a stepwise fashion, for example by recalibrating the output layer
+with a modest number of local cases or by fine-tuning the encoder on pooled
+data from participating sites.
+These findings would in turn guide practical integration into hospital EHR
+systems by clarifying whether a single global model with site-specific decision
+thresholds is sufficient, or whether locally adapted models are needed to support safe deployment.
 }
 %Second, cases were indexed by the first GC diagnosis code, and laboratory features were defined as the oldest available values within the 730 days preceding (and including) the index admission start date for cases (and across the full record for controls).
 %While this policy reduces peri-diagnostic bias relative to using recent values, it also collapses longitudinal information into single snapshots and may discard informative dynamics.
 
-\textcolor{red}{
 Second, cases were indexed by the first GC diagnosis code, and for each CBC/CMP laboratory we summarized the oldest available measurement within the 730-day pre-index window for cases (and across the full available record for controls).
 This policy was intended to reduce peri-diagnostic bias, whereby laboratory values obtained during diagnostic work-up or acute decompensation near the time of diagnosis might dominate the signal, and to emulate a more screening-like setting in which risk scores are computed at routine encounters earlier in the disease course.
 However, by collapsing irregular longitudinal trajectories into single-time-point snapshots, this representation cannot exploit trends, volatility, or recovery patterns that often carry additional predictive information and may attenuate the discriminative capacity of the model compared with fully longitudinal approaches.
 Moreover, because at least one measurement of each laboratory is required, this strategy likely enriches the cohort for patients with more complete laboratory histories and higher health-care utilization, which may bias performance estimates and limit generalizability to populations with sparser testing.
-}
 %Moreover, restricting to a lab-complete cohort may introduce selection bias toward patients with more complete testing, potentially limiting generalizability to settings with sparser laboratory coverage.
 
-\textcolor{red}{
-Third, we restricted all analyses to a “lab-complete” cohort, requiring non-missing values for all predefined laboratory predictors within the look-back window. This design choice simplifies model development and avoids introducing additional uncertainty from ad hoc imputation; however, it also induces selection bias. In routine care, comprehensive laboratory panels are more likely to be ordered for patients with greater healthcare utilization and higher comorbidity burden, whereas individuals with fewer encounters or milder symptoms are less likely to have all tests measured. As a result, the case mix, event rate, and distribution of predictors in our training data may differ from those in a broader outpatient or low-utilization population. This discrepancy could affect model calibration and external generalization: for example, risk scores learned on a lab-complete inpatient cohort may over- or under-estimate absolute risk in settings where testing intensity and missingness patterns differ. The direction and magnitude of this effect cannot be determined from our current single-center data and will need to be quantified in future prospective or multi-center external validation studies. Future work should relax the lab-complete requirement by incorporating principled strategies for handling missing data (e.g., multiple imputation or model-based imputation), so that patients with partial laboratory profiles can also contribute to model development.
+Third, we restricted all analyses to a “lab-complete” cohort, requiring non-missing values for all predefined laboratory predictors within the look-back window. This design choice simplifies model development and avoids introducing additional uncertainty from ad hoc imputation; however, it also induces selection bias. In routine care, comprehensive laboratory panels are more likely to be ordered for patients with greater healthcare utilization and higher comorbidity burden, whereas individuals with fewer encounters or milder symptoms are less likely to have all tests measured. As a result, the case mix, event rate, and distribution of predictors in our training data may differ from those in a broader outpatient or low-utilization population.
+{\color{blue}
+This discrepancy could affect model calibration and external generalization: for example, risk scores learned on a lab-complete inpatient cohort may over- or under-estimate absolute risk in settings where testing intensity and missingness patterns differ. The direction and magnitude of this effect cannot be determined from our current single-center data and will need to be quantified in future prospective or multi-center external validation studies. Future work should relax the lab-complete requirement by incorporating principled strategies for handling missing data (e.g., multiple imputation or model-based imputation), so that patients with partial laboratory profiles can also contribute to model development.
+}
+{\color{red}
+In our setting, this selection mechanism is likely to introduce an optimistic bias: the lab-complete cohort is enriched for patients with denser testing and more informative predictors, so the discrimination metrics (e.g., AUROC) and positive predictive value reported here may overestimate the performance that would be observed in real-world populations where laboratory testing is sparser and missingness is more prevalent. In such settings, both AUROC and, in particular, precision/recall-based measures may be lower, and model calibration may deteriorate if the model is applied without recalibration.
+Future work should relax the lab-complete requirement by incorporating principled strategies for handling missing data (e.g., multiple imputation or model-based imputation), so that patients with partial laboratory profiles can also contribute to model development.
 }
 
-\textcolor{red}{
 In addition, because the held-out GC test set is of moderate size with a limited number of positive cases, the bootstrap confidence intervals are relatively wide and partially overlapping across models, which reflects finite-sample uncertainty.
 Larger external cohorts will be required to narrow these intervals and to more precisely quantify the performance differences between models.
-}
 
 %{Finally, we did not evaluate subgroup fairness (e.g., by age, sex, or race/ethnicity) or conduct a full calibration analysis.}
-{\color{red}
 Finally, we did not evaluate subgroup fairness (e.g., performance stratified by age, sex, or race/ethnicity), 
 and our calibration assessment was restricted to aggregate reliability diagrams and ECE on the GC test set. 
 For a clinical risk prediction tool, however, well-calibrated risk estimates and equitable performance across key patient subgroups 
 are essential for safe deployment; accordingly, detailed subgroup- and setting-specific calibration and fairness analyses, 
 ideally using external multi-center cohorts, will be required before any clinical use.
-}
 
 
 Several extensions appear promising.
@@ -1002,12 +973,12 @@ Several extensions appear promising.
 
 \section{Conclusions}
 By pretraining a shared encoder on related GI/HPB cancers and adapting it to gastric cancer (GC) using only routine and structured EHR variables,
-{\color{red}we demonstrated that cross-cancer transfer learning can stabilize GC risk
+we demonstrated that cross-cancer transfer learning can stabilize GC risk
 modeling under label scarcity within this single-center inpatient cohort.
 Rather than providing a fully validated, ready-to-deploy tool,
 our study should be viewed as a proof-of-concept for a potentially reusable
 framework whose real-world utility and generalizability will need to be
-confirmed in future multi-center external validation studies.}
+confirmed in future multi-center external validation studies.
 Because it operates on data already collected in routine care, the approach can be embedded into EHR workflows to prioritize timely endoscopy referrals, and target follow‑up in resource‑constrained settings—aligning with the broader role of AI as clinician decision support in acute care. 
 Before any clinical use, external multi‑site validation and prevalence‑aware calibration remain essential; nonetheless, the framework offers a practical blueprint for repurposing heterogeneous cancer cohorts to bootstrap GC models and, more broadly, a reusable foundation for early‑risk identification in other underrepresented cancers.
 
