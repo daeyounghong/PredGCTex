@@ -810,11 +810,6 @@ In omics, cross-cancer transfer learning improves survival or progression predic
 %Recent multi-task formulations that learn shared representations across cancers likewise report the largest gains for smaller cohorts~\citep{Lin2024MTLGNN}.
 Our cross-cancer transfer on structured EHR variables parallels these patterns and suggests that cancer-agnostic signals learned from routine labs and comorbidity profiles can be reused to stabilize GC modeling when labels are limited.
 
-{\color{blue}
-We note that the absolute improvements in AUROC are modest when comparing Transfer with a scratch MLP (Table~\ref{tab:model-compare-gc1}).
-As detailed in the Results section, these gains are consistently observed across repetitions and bootstrap-based uncertainty estimates, despite the moderate size of the held-out GC test set, but we do not claim a dramatic effect size.
-Rather, the main value of the proposed framework lies in its stability and behavior under label scarcity.
-\par}
 {\color{red}
 We note that the absolute improvement in AUROC when comparing Transfer with
 the scratch MLP is modest (Table~\ref{tab:model-compare-gc1}; AUROC $0.854$
@@ -834,9 +829,6 @@ In line with this, DeLong's test showed statistically significant AUROC improvem
 while the comparison versus the scratch MLP did not reach conventional significance ($p=0.1231$), 
 which is compatible with a small effect size and limited statistical power given the moderate GC test cohort size.
 
-{\color{blue}
-From a clinical standpoint, such modest but consistent gains in discrimination and F1 at fixed endoscopy capacity can still translate into more accurate prioritization of patients for evaluation, especially in systems where GC labels are sparse but other GI/HPB cancers are commonly seen.
-\par}
 {\color{red}
 From a clinical standpoint, even such modest but consistent gains in discrimination and precision may still be relevant when predictions are used to prioritize patients for resource-intensive investigations such as upper endoscopy. 
 The Transfer model achieves similar sensitivity but higher specificity and F1 than the scratch MLP, implying that, for a fixed endoscopy capacity, a slightly larger fraction of procedures would be directed toward patients who truly have GC and fewer toward those at very low risk. 
@@ -947,9 +939,6 @@ Moreover, because at least one measurement of each laboratory is required, this 
 %Moreover, restricting to a lab-complete cohort may introduce selection bias toward patients with more complete testing, potentially limiting generalizability to settings with sparser laboratory coverage.
 
 Third, we restricted all analyses to a “lab-complete” cohort, requiring non-missing values for all predefined laboratory predictors within the look-back window. This design choice simplifies model development and avoids introducing additional uncertainty from ad hoc imputation; however, it also induces selection bias. In routine care, comprehensive laboratory panels are more likely to be ordered for patients with greater healthcare utilization and higher comorbidity burden, whereas individuals with fewer encounters or milder symptoms are less likely to have all tests measured. As a result, the case mix, event rate, and distribution of predictors in our training data may differ from those in a broader outpatient or low-utilization population.
-{\color{blue}
-This discrepancy could affect model calibration and external generalization: for example, risk scores learned on a lab-complete inpatient cohort may over- or under-estimate absolute risk in settings where testing intensity and missingness patterns differ. The direction and magnitude of this effect cannot be determined from our current single-center data and will need to be quantified in future prospective or multi-center external validation studies. Future work should relax the lab-complete requirement by incorporating principled strategies for handling missing data (e.g., multiple imputation or model-based imputation), so that patients with partial laboratory profiles can also contribute to model development.
-}
 {\color{red}
 In our setting, this selection mechanism is likely to introduce an optimistic bias: the lab-complete cohort is enriched for patients with denser testing and more informative predictors, so the discrimination metrics (e.g., AUROC) and positive predictive value reported here may overestimate the performance that would be observed in real-world populations where laboratory testing is sparser and missingness is more prevalent. In such settings, both AUROC and, in particular, precision/recall-based measures may be lower, and model calibration may deteriorate if the model is applied without recalibration.
 Future work should relax the lab-complete requirement by incorporating principled strategies for handling missing data (e.g., multiple imputation or model-based imputation), so that patients with partial laboratory profiles can also contribute to model development.
