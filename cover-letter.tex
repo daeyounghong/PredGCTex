@@ -1,0 +1,179 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{setspace}
+\usepackage{xcolor}
+
+\setstretch{1.2}
+
+\begin{document}
+
+%\begin{flushright}
+%\today
+%\end{flushright}
+
+Editor-in-Chief \\
+\textit{Diagnostics} (MDPI) \\[1em]
+
+\noindent
+Dear Editor,
+
+\medskip
+
+\noindent
+We are grateful for the opportunity to submit a revised version of our manuscript
+entitled \textit{``Cross-Cancer Transfer Learning for Gastric Cancer Risk Prediction from Electronic Health Records''}.
+We sincerely thank you and all five reviewers for the careful evaluation of our work and for the many constructive and insightful comments.
+These suggestions have substantially improved the clarity, rigor, and clinical relevance of the manuscript.
+
+In the revised submission, we have provided:
+(i) a clean version of the manuscript,
+(ii) a version with all changes highlighted in \textcolor{red}{red}, and
+(iii) detailed, point-by-point response documents for Reviewers 1--5.
+Below, we briefly summarize the main revisions and how they address the reviewers’ concerns.
+For a full account of all revisions in response to each individual comment, please refer to the separate point-by-point response documents for Reviewers 1--5.
+
+\medskip
+\noindent
+\textbf{1. Abstract and positioning of the contribution}
+
+\begin{itemize}
+  \item We revised the Abstract to explicitly report the sample size of the gastric cancer (GC) cohort (508 GC cases), providing clearer context for the study population.
+  \item We now state explicitly in the Abstract that all models were developed and evaluated using a single-center inpatient EHR dataset (MIMIC-IV) and that external validation on multi-center and outpatient cohorts will be required before any clinical deployment, as requested by Reviewers 1 and 3.
+  \item The final sentence of the Abstract has been rephrased to emphasize the potential clinical integration of our framework into EHR-based triage and decision-support workflows, conditional on confirmation in future multi-center studies.
+\end{itemize}
+
+\medskip
+\noindent
+\textbf{2. Motivation for structured EHRs and clinical/biological rationale for cross-cancer transfer}
+
+\begin{itemize}
+  \item In response to Reviewer 1, we added a short paragraph in the \textit{Introduction} clarifying why we focus on structured EHR variables (demographics, ICD-derived comorbidities, and routine laboratory tests) as a deployment-friendly starting point, and how this choice facilitates implementation across diverse care settings without requiring imaging or free-text notes.
+  \item Following Reviewer 2’s and Reviewer 5’s suggestions, we expanded the \textit{Introduction} to provide explicit clinical and biological rationale for why gastrointestinal and hepatopancreatobiliary cancers share EHR-visible signatures (e.g., iron-deficiency anemia and occult bleeding, inflammatory and nutritional markers, and metabolic/dysglycemic patterns).
+  We connect these shared axes directly to our structured EHR feature set and clarify that the main contribution is an applied, translational instantiation of multi-source transfer learning in a GC risk modeling context.
+\end{itemize}
+
+\medskip
+\noindent
+\textbf{3. Clarification of novelty and relation to prior transfer/self-supervised EHR work}
+
+\begin{itemize}
+  \item In line with Reviewer 4’s comments, we explicitly reposition the work as an \emph{applied} rather than fundamentally algorithmic contribution.
+  New paragraphs in the \textit{Introduction} describe our framework as an instantiation of established multi-task and transfer-learning principles using structured EHR data for GC risk prediction under label scarcity.
+  \item We added a dedicated paragraph discussing recent transfer and self-supervised/foundation-model approaches for EHRs (e.g., contrastive and masked-feature pretraining), situating our supervised cross-cancer transfer strategy within this broader literature and clarifying how our work complements, rather than replaces, these emerging directions.
+\end{itemize}
+
+\medskip
+\noindent
+\textbf{4. Cohort construction, missing data, and lab-complete inclusion criteria}
+
+\begin{itemize}
+  \item In response to Reviewer 3, we clarified in the \textit{Methods} (Cohort Construction and Features) how the lab-complete inclusion criterion was applied and reported the resulting reductions in cohort size:
+  approximately 31\% of initially eligible GC cases and controls, and 19--36\% of patients across the pretraining cancers, are excluded by this filter.
+  \item Following Reviewers 1 and 4, we expanded the \textit{Discussion} to more explicitly analyze the potential selection bias induced by requiring complete laboratory panels.
+  We now emphasize that this can preferentially select patients with higher healthcare utilization and more complete laboratory histories, potentially affecting calibration and generalizability, and we outline how future work could incorporate principled missing-data strategies and relax the lab-complete design.
+\end{itemize}
+
+\medskip
+\noindent
+\textbf{5. Data representation strategy and longitudinal information}
+
+\begin{itemize}
+  \item Responding to Reviewer 4’s detailed comment, we clarified in the \textit{Methods} that we summarize CBC and CMP laboratories using the \emph{oldest} available value within a 730-day pre-index window for GC cases (and across the full record for controls).
+  We explain that this was chosen to approximate a screening-like deployment scenario, to reduce peri-diagnostic bias from acute work-ups, and to maintain a simple, comparable tabular representation across multiple cancer cohorts.
+  \item In the \textit{Limitations}, we now explicitly acknowledge that this representation collapses irregular longitudinal trajectories into single snapshots, which may obscure trends and intra-individual variability that often carry predictive information and may bias the cohort toward patients with richer laboratory histories.
+\end{itemize}
+
+\medskip
+\noindent
+\textbf{6. Class imbalance handling and evaluation protocol}
+
+\begin{itemize}
+  \item In response to Reviewer 1’s concern about class imbalance, we expanded the \textit{Methods} to describe our strategy across data, training, and evaluation:
+  nested case–control sampling with a fixed 1:3 case:control ratio,
+  stratified train/validation/test splits,
+  a class-weighted binary cross-entropy loss with positive-class weight $\alpha = 3$,
+  and the use of AUROC and average precision as metrics that are less sensitive to class prevalence.
+%  \item We also clarified that all models are trained and evaluated over 10 independent repetitions with different random splits, and that we summarize performance across these repetitions to quantify model stability.
+\end{itemize}
+
+\medskip
+\noindent
+\textbf{7. Statistical uncertainty, confidence intervals, and DeLong tests}
+
+\begin{itemize}
+  \item Addressing Reviewers 1, 2, and 4, we substantially expanded the \textit{Statistical Analysis} and \textit{Results} sections to report uncertainty and stability:
+  we now present AUROC in Table~1 as mean $\pm$ standard deviation across repetitions, together with 95\% patient-level bootstrap confidence intervals, and report standard deviations for AUROC in Table~2 as well.
+  \item We added patient-level bootstrap confidence intervals (2{,}000 resamples) for AUROC and conducted pairwise DeLong tests comparing the Transfer model with LR, XGB, and the scratch MLP on the common GC test set.
+  The results show that Transfer significantly outperforms LR and XGB, while the improvement over the scratch MLP is modest and does not reach conventional significance, which we explicitly describe and interpret in the \textit{Results} and \textit{Discussion}.
+  \item Figures illustrating AUROC trends under reduced GC labels (Figures~2 and 3 in the revised manuscript) now include vertical error bars denoting 95\% confidence intervals across repeated runs, and we added text explaining the observed variability patterns and their implications for model stability under label scarcity.
+\end{itemize}
+
+\medskip
+\noindent
+\textbf{8. Calibration analysis and subgroup fairness}
+
+\begin{itemize}
+  \item In response to Reviewers 1 and 2, we added an explicit calibration analysis for all four models on the held-out GC test set, including reliability diagrams and the expected calibration error (ECE).
+  The new figure and accompanying text describe aggregate calibration behavior and complement the discrimination metrics.
+  \item We expanded the \textit{Discussion} and \textit{Limitations} to emphasize that, while we now assess aggregate calibration, we have not yet conducted a systematic subgroup fairness analysis.
+  We explicitly state that future work should evaluate calibration and performance across key subgroups and in external cohorts prior to any clinical deployment.
+\end{itemize}
+
+\medskip
+\noindent
+\textbf{9. Interpretability and clinical insight (SHAP analysis)}
+
+\begin{itemize}
+  \item Following Reviewers 1 and 4, we incorporated a SHapley Additive Explanations (SHAP) analysis for the Transfer model.
+  In the \textit{Statistical Analysis} subsection, we describe how DeepLIFT-based SHAP values were computed for the neural network.
+  \item We added a new \textit{Results} subsection on feature importance, together with a global SHAP summary figure.
+  The \textit{Discussion} now includes a qualitative clinical interpretation of the most influential features and how they align with known pathophysiologic mechanisms, thereby strengthening the clinical insight and interpretability of the model.
+\end{itemize}
+
+\medskip
+\noindent
+\textbf{10. External validation, generalizability, and real-world deployment}
+
+\begin{itemize}
+  \item Several reviewers (particularly Reviewers 2 and 4) emphasized the need to temper claims of generalizability and to discuss external validation in greater depth.
+  We have therefore revised the \textit{Discussion} and \textit{Conclusions} to:
+  (i) describe MIMIC-IV more explicitly as a single-center, predominantly inpatient dataset;
+  (ii) explain how differences in patient mix, workflows, and practice patterns may limit transportability to outpatient and multi-institutional settings; and
+  (iii) reframe our framework as a proof-of-concept within this cohort, whose real-world utility must be confirmed through external multi-center validation and, if necessary, recalibration.
+  \item We added text on real-world deployment feasibility and computational efficiency, underscoring that the proposed models rely only on routinely collected structured EHR variables and can be implemented as background risk scores to support triage and prioritization, rather than replace diagnostic endoscopy.
+\end{itemize}
+
+
+\noindent
+\textbf{11. Reproducibility and code availability}
+
+\begin{itemize}
+  \item In response to Reviewer 4’s request regarding reproducibility, we now state our intention to release the implementation (model code and training scripts) used in this study to facilitate full replication of our results with MIMIC-IV, subject to the dataset’s access conditions.
+  This addition appears in the \textit{Methods} and is reiterated in the \textit{Discussion}.
+\end{itemize}
+
+\medskip
+\noindent
+\textbf{12. Typographical and formatting corrections}
+
+\begin{itemize}
+  \item We carefully revised equation formatting and spacing issues highlighted by Reviewer 3 (e.g., around Eq.~(1) and related expressions), and we performed an additional proofreading pass for minor typographical inconsistencies throughout the manuscript.
+\end{itemize}
+
+\medskip
+\noindent
+Where reviewers requested additional analyses that were not feasible within the current revision (e.g., full external validation on independent multi-institutional EHR datasets or a comprehensive subgroup fairness evaluation), we have been explicit about these limitations, explained the practical constraints, and outlined these items as priorities for future work.
+
+We hope that the revisions have addressed the reviewers’ concerns and improved the manuscript’s clarity, rigor, and clinical relevance.
+We are very grateful for the constructive feedback and for your consideration of our revised submission.
+Please do not hesitate to contact us if any further information or clarification is needed.
+
+\medskip
+
+\noindent
+Sincerely,\\[0.5em]
+Daeyoung Hong, PhD \\
+on behalf of all co-authors
+
+\end{document}
