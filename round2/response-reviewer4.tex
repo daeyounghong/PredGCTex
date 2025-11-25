@@ -13,7 +13,7 @@
 \begin{document}
 
 \begin{center}
-{\Large \textbf{Responses to Reviewer 1}} \\[6pt]
+{\Large \textbf{Responses to Reviewer 4}} \\[6pt]
 %Manuscript ID: \textbf{diagnostics-3950051} \\
 %Title: \textit{Cross-Cancer Transfer Learning for Gastric Cancer Risk Prediction from Electronic Health Records}
 \end{center}
@@ -34,7 +34,7 @@ First, the validation is limited to a single cohort derived from the MIMIC-IV da
 We thank the reviewer for this important comment regarding generalizability
 beyond the single MIMIC-IV cohort. As suggested, we have expanded the
 paragraph in the Discussion section that describes the study’s limitations
-(p.~X, lines~Y--Z) to elaborate on how future multicenter or international
+(pp.~15--16, lines~585--594) to elaborate on how future multicenter or international
 validation could inform the model’s transferability and EHR integration.
 In particular, we now explicitly discuss that multicenter and international
 studies would allow us to measure performance and calibration drift across
@@ -53,16 +53,16 @@ Second, while the improvement over the baseline MLP model is consistent, the abs
 
 \subsection*{Response 2}
 We thank the reviewer for this insightful comment. 
-In the revised Discussion, we explicitly acknowledge that the improvement of the Transfer model over the scratch MLP on the full-label GC task is modest in absolute terms (AUROC 0.854 vs 0.830) and emphasize that our main contribution lies in the model’s stability and behavior under label scarcity (p.~X, lines~X--X).
+In the revised Discussion, we explicitly acknowledge that the improvement of the Transfer model over the scratch MLP on the full-label GC task is modest in absolute terms (AUROC 0.854 vs 0.830) and emphasize that our main contribution lies in the model’s stability and behavior under label scarcity (p.~13, lines~463--471).
 We also clarify how the observed differences in AUROC, F1, and specificity could affect clinical decision-making when GC risk scores are used to prioritize patients for upper endoscopy or to stratify high-risk populations. 
-Furthermore, we have added a short remark highlighting that we did not perform a formal decision-curve or clinical-impact analysis in the present study, and that future work should quantify the net clinical benefit of using the proposed model to guide endoscopy referrals (p.~X, lines~X--X).
+Furthermore, we have added a short remark highlighting that we did not perform a formal decision-curve or clinical-impact analysis in the present study, and that future work should quantify the net clinical benefit of using the proposed model to guide endoscopy referrals (pp.~13--14, lines~478--492).
 
 
 \subsection*{Comment 3}
 I found the Limitations section well balanced, but it would benefit from a slightly deeper reflection on the potential selection bias introduced by the “lab-complete” criterion, which excludes patients with missing laboratory data and may alter the underlying risk distribution. A brief comment on the likely direction of this bias (e.g., a possible overestimation of model performance in cohorts with denser testing) would help readers interpret the reported results.
 
 \subsection*{Response 3}
-We thank the reviewer for this insightful comment. We fully agree that the “lab-complete” criterion can introduce selection bias and that clarifying the likely direction of this bias is important for interpreting the reported performance metrics. In the revised Discussion, we have expanded the paragraph on the lab-complete cohort to highlight that, in our setting, it is likely to induce an optimistic bias in the estimated performance (p.~X, lines~X--X).
+We thank the reviewer for this insightful comment. We fully agree that the “lab-complete” criterion can introduce selection bias and that clarifying the likely direction of this bias is important for interpreting the reported performance metrics. In the revised Discussion, we have expanded the paragraph on the lab-complete cohort to highlight that, in our setting, it is likely to induce an optimistic bias in the estimated performance (p.~16, lines~617--627).
 
 
 
@@ -71,7 +71,7 @@ Finally, I recommend integrating the following reference into the Introduction t
 
 \subsection*{Response 4}
 We thank the reviewer for this helpful suggestion. 
-In the revised Introduction, we now cite and discuss the narrative review by Palomba et al.\ (p.~X, lines~X--X), to explicitly situate our EHR-based gastric cancer risk prediction model within the broader context of AI-driven predictive medicine and surgical oncology.
+In the revised Introduction, we now cite and discuss the narrative review by Palomba et al.\ (pp.~1--2, lines~32--38), to explicitly situate our EHR-based gastric cancer risk prediction model within the broader context of AI-driven predictive medicine and surgical oncology.
 
 
 
