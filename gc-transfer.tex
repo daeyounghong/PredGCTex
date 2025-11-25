@@ -226,11 +226,9 @@ ranking as the fifth most frequently diagnosed malignancy and the fourth leading
 Prognosis remains strongly dependent on the stage at diagnosis, 
 with 5-year survival rates exceeding 70\% for localized disease but dropping below 10\% for metastatic GC~\citep{NCI2023stomach}.
 
-{\color{red}
 Against this background, artificial intelligence (AI) is being explored as a tool to support screening and diagnosis across a broad spectrum of surgical diseases, including benign and malignant gastrointestinal disorders. 
 AI-based algorithms are being incorporated into screening pathways and perioperative decision-making in surgical oncology to improve detection efficiency and diagnostic accuracy~\citep{palomba2024}.
 These developments illustrate the potential of AI-driven predictive models to facilitate earlier detection of GC and to optimize the use of resource-intensive investigations such as upper endoscopy in high-risk populations.
-}
 
 Harnessing routinely collected electronic health record (EHR) data for earlier GC identification could improve outcomes by enabling timely endoscopy and treatment.
 Structured EHR signals—such as demographics, diagnoses, and laboratory data—represent an attractive source for data-driven cancer screening~\citep{read2023cancers,huang2022jco}.
@@ -812,7 +810,6 @@ In omics, cross-cancer transfer learning improves survival or progression predic
 %Recent multi-task formulations that learn shared representations across cancers likewise report the largest gains for smaller cohorts~\citep{Lin2024MTLGNN}.
 Our cross-cancer transfer on structured EHR variables parallels these patterns and suggests that cancer-agnostic signals learned from routine labs and comorbidity profiles can be reused to stabilize GC modeling when labels are limited.
 
-{\color{red}
 We note that the absolute improvement in AUROC when comparing Transfer with
 the scratch MLP is modest (Table~\ref{tab:model-compare-gc1}; AUROC $0.854$
 vs.\ $0.830$). As detailed in the Results
@@ -825,19 +822,16 @@ effect size at the population level, but rather a small and reproducible shift
 in the operating characteristics of the model.
 The main value of the proposed
 framework lies in its stability and behavior under label scarcity.
-}
 As GC training labels are reduced, the relative advantage of Transfer becomes more pronounced in AUROC, AP, and F1 (Figure~\ref{fig:model-gcrate}), suggesting that pretraining on related cancers yields a more stable operating profile when data are limited.
 In line with this, DeLong's test showed statistically significant AUROC improvements of the Transfer model over LR and XGB, 
 while the comparison versus the scratch MLP did not reach conventional significance ($p=0.1231$), 
 which is compatible with a small effect size and limited statistical power given the moderate GC test cohort size.
 
-{\color{red}
 From a clinical standpoint, even such modest but consistent gains in discrimination and precision may still be relevant when predictions are used to prioritize patients for resource-intensive investigations such as upper endoscopy. 
 The Transfer model achieves similar sensitivity but higher specificity and F1 than the scratch MLP, implying that, for a fixed endoscopy capacity, a slightly larger fraction of procedures would be directed toward patients who truly have GC and fewer toward those at very low risk. 
 In high-volume settings where only a minority of inpatients can be referred for endoscopy, small improvements in the concentration of true GC cases within the high-risk stratum could translate into earlier diagnosis or fewer unnecessary procedures.
 We did not perform a formal decision-curve or clinical-impact analysis in this work, and our conclusions are therefore limited to conventional discrimination and classification metrics. 
 Future studies should quantify the net clinical benefit of using the proposed transfer-learning model to guide endoscopy referrals, for example by comparing the number of additional GC cases detected and the number of endoscopies avoided per 1,000 patients across a range of clinically plausible risk thresholds.
-}
 
 
 From a calibration standpoint, our reliability and ECE analyses indicate that all four models achieve broadly acceptable calibration for GC risk estimation, 
@@ -917,7 +911,6 @@ Real-world deployment will require rigorous external validation and, if
 necessary, recalibration on independent multi-center and outpatient EHR
 cohorts to assess robustness under domain shift and to quantify clinical
 impact.
-{\color{red}
 In a future multicenter or international study, such validation would allow us
 to directly quantify how well the shared encoder and transfer-learning
 framework transport to hospitals with different patient populations, coding
@@ -930,7 +923,6 @@ data from participating sites.
 These findings would in turn guide practical integration into hospital EHR
 systems by clarifying whether a single global model with site-specific decision
 thresholds is sufficient, or whether locally adapted models are needed to support safe deployment.
-}
 %Second, cases were indexed by the first GC diagnosis code, and laboratory features were defined as the oldest available values within the 730 days preceding (and including) the index admission start date for cases (and across the full record for controls).
 %While this policy reduces peri-diagnostic bias relative to using recent values, it also collapses longitudinal information into single snapshots and may discard informative dynamics.
 
@@ -941,10 +933,8 @@ Moreover, because at least one measurement of each laboratory is required, this 
 %Moreover, restricting to a lab-complete cohort may introduce selection bias toward patients with more complete testing, potentially limiting generalizability to settings with sparser laboratory coverage.
 
 Third, we restricted all analyses to a “lab-complete” cohort, requiring non-missing values for all predefined laboratory predictors within the look-back window. This design choice simplifies model development and avoids introducing additional uncertainty from ad hoc imputation; however, it also induces selection bias. In routine care, comprehensive laboratory panels are more likely to be ordered for patients with greater healthcare utilization and higher comorbidity burden, whereas individuals with fewer encounters or milder symptoms are less likely to have all tests measured. As a result, the case mix, event rate, and distribution of predictors in our training data may differ from those in a broader outpatient or low-utilization population.
-{\color{red}
 In our setting, this selection mechanism is likely to introduce an optimistic bias: the lab-complete cohort is enriched for patients with denser testing and more informative predictors, so the discrimination metrics (e.g., AUROC) and positive predictive value reported here may overestimate the performance that would be observed in real-world populations where laboratory testing is sparser and missingness is more prevalent. In such settings, both AUROC and, in particular, precision/recall-based measures may be lower, and model calibration may deteriorate if the model is applied without recalibration.
 Future work should relax the lab-complete requirement by incorporating principled strategies for handling missing data (e.g., multiple imputation or model-based imputation), so that patients with partial laboratory profiles can also contribute to model development.
-}
 
 In addition, because the held-out GC test set is of moderate size with a limited number of positive cases, the bootstrap confidence intervals are relatively wide and partially overlapping across models, which reflects finite-sample uncertainty.
 Larger external cohorts will be required to narrow these intervals and to more precisely quantify the performance differences between models.
